@@ -98,7 +98,8 @@ class AgentPolicy(Agent):
         Evaluate the agent policy to choose an action, a, given state, s.
         """
         # compute action probabilities
-        action_probabilities = self.network.evaluate(state.reshape(1, -1))
+        #action_probabilities = self.network.evaluate(state.reshape(1, -1))
+        action_probabilities = self.network.evaluate(np.expand_dims(state, axis=0))
 
         if deterministic:
             # choose action with highest probability
