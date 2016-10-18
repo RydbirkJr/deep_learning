@@ -33,15 +33,15 @@ class AgentPolicy(Agent):
             all_states = np.concatenate([trajectory["state"] for trajectory in trajectories])
 
             # 2. compute cumulative discounted rewards (returns)
-            rets = [self._cumulative_discount(trajectory["reward"], discount_factor) for trajectory in trajectories]
-            maxlen = max(len(ret) for ret in rets)
-            padded_rets = [np.concatenate([ret, np.zeros(maxlen - len(ret))]) for ret in rets]
+            rewards = [self._cumulative_discount(trajectory["reward"], discount_factor) for trajectory in trajectories]
+            maxlen = max(len(reward) for reward in rewards)
+            padded_rewards = [np.concatenate([reward, np.zeros(maxlen - len(reward))]) for reward in rewards]
 
             # 3. compute time-dependent baseline
-            baseline = np.mean(padded_rets, axis=0)
+            baseline = np.mean(padded_rewards, axis=0)
 
             # 4. compute advantages
-            advs = [ret - baseline[:len(ret)] for ret in rets]
+            advs = [reward - baseline[:len(reward)] for reward in rewards]
             all_actions = np.concatenate([trajectory["action"] for trajectory in trajectories])
             all_advantages = np.concatenate(advs)
 
@@ -52,18 +52,18 @@ class AgentPolicy(Agent):
             eplens = np.array([len(trajectory["reward"]) for trajectory in trajectories])  # trajectory lengths
 
             # compute validation reward
-            val_rs = np.array(
+            val_reward = np.array(
                 [self.get_trajectory(time_limit, deterministic=True)['reward'].sum() for _ in range(10)]
             )
 
             # update stats
             mean_train_rs.append(train_rs.mean())
-            mean_val_rs.append(val_rs.mean())
+            mean_val_rs.append(val_reward.mean())
             self.loss.append(loss)
 
             # print stats
             print '%3d mean_train_r: %6.2f mean_val_r: %6.2f loss: %f' % (
-                epoch + 1, train_rs.mean(), val_rs.mean(), loss)
+                epoch + 1, train_rs.mean(), val_reward.mean(), loss)
 
             # check for early stopping: true if the validation reward has not changed in n_early_stop epochs
             if early_stop and len(mean_val_rs) >= early_stop and \
