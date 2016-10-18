@@ -18,7 +18,7 @@ class AgentPolicy(Agent):
         """
         mean_train_rs = []
         mean_val_rs = []
-        loss = []
+        self.loss = []
 
         for epoch in xrange(epochs):
 
@@ -47,6 +47,7 @@ class AgentPolicy(Agent):
 
             # 5. do policy gradient update step
             loss = self.network.train(all_states, all_actions, all_advantages, learning_rate)
+
             train_rs = np.array([trajectory["reward"].sum() for trajectory in trajectories])  # trajectory total rewards
             eplens = np.array([len(trajectory["reward"]) for trajectory in trajectories])  # trajectory lengths
 
@@ -58,7 +59,7 @@ class AgentPolicy(Agent):
             # update stats
             mean_train_rs.append(train_rs.mean())
             mean_val_rs.append(val_rs.mean())
-            loss.append(loss)
+            self.loss.append(loss)
 
             # print stats
             print '%3d mean_train_r: %6.2f mean_val_r: %6.2f loss: %f' % (
