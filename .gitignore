@@ -87,3 +87,9 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+.idea/inspectionProfiles
+.idea/deep_learning.iml
+.idea/modules.xml
+.idea/misc.xml
+.idea/vcs.xml
