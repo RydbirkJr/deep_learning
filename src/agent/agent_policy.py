@@ -65,7 +65,7 @@ class AgentPolicy(Agent):
             print '%3d mean_train_r: %6.2f mean_val_r: %6.2f loss: %f' % (
                 epoch + 1, train_rs.mean(), val_reward.mean(), loss)
 
-            # check for early stopping: true if the validation reward has not changed in n_early_stop epochs
+            # check for early stopping: true if the validation reward has not changed in early_stop epochs
             if early_stop and len(mean_val_rs) >= early_stop and \
                     all([x == mean_val_rs[-1] for x in mean_val_rs[-early_stop:-1]]):
                 break
@@ -98,7 +98,7 @@ class AgentPolicy(Agent):
         Evaluate the agent policy to choose an action, a, given state, s.
         """
         # compute action probabilities
-        #action_probabilities = self.network.evaluate(state.reshape(1, -1))
+        # action_probabilities = self.network.evaluate(state.reshape(1, -1))
         action_probabilities = self.network.evaluate(np.expand_dims(state, axis=0))
 
         if deterministic:
@@ -114,8 +114,9 @@ class AgentPolicy(Agent):
         """
         reward_out = np.zeros(len(reward), 'float64')
         reward_out[-1] = reward[-1]
-        for i in reversed(xrange(len(reward) - 1)):
+        for i in reversed(range(len(reward) - 1)):
             reward_out[i] = reward[i] + gamma * reward_out[i + 1]
         return reward_out
+
 
 Agent.register(AgentPolicy)
