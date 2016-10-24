@@ -20,6 +20,9 @@ class AgentPolicy(Agent):
         mean_val_rs = []
         self.loss = []
 
+        print "Start training using %d epochs, %d states per batch, %d timelimit, %1.5f learning rate" % (epochs,
+            states_per_batch, time_limit, learning_rate)
+
         for epoch in xrange(epochs):
 
             # 1. collect trajectories until we have at least states_per_batch total timesteps
@@ -46,6 +49,7 @@ class AgentPolicy(Agent):
             all_advantages = np.concatenate(advs)
 
             # 5. do policy gradient update step
+
             loss = self.network.train(all_states, all_actions, all_advantages, learning_rate)
 
             train_rs = np.array([trajectory["reward"].sum() for trajectory in trajectories])  # trajectory total rewards

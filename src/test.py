@@ -25,8 +25,9 @@ agent = AgentPolicy(env, network)
 agent.learn(
     epochs=100,
     learning_rate=0.001,
-    discount_factor=1,
-    states_per_batch=10000,
-    time_limit=10000,
+    discount_factor=1.0,
+    states_per_batch=50000,
+    time_limit=1000,
     early_stop=5
 )
+
