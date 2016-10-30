@@ -4,8 +4,8 @@ from abc import abstractmethod, ABCMeta
 class Agent(object):
     __metaclass__ = ABCMeta
 
-    network = None
-    environment = None
+    # network = None
+    # environment = None
 
     def __init__(self, environment, network):
         # type: (EnvSpec, Network) -> Agent
@@ -34,3 +34,4 @@ class Agent(object):
     @abstractmethod
     def get_action(self, state, deterministic=True):
         raise NotImplementedError()
+
