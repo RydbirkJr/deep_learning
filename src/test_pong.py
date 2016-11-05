@@ -1,7 +1,7 @@
 import gym
 import numpy as np
-from src.agent.agent_policy import AgentPolicy
-from src.network.network import Network
+from agent.agent_policy import AgentPolicy
+from network.network import Network
 from PIL import Image
 import time
 
