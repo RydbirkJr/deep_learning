@@ -1,4 +1,4 @@
-from agent.agent import Agent
+from agent import Agent
 import numpy as np
 from PIL import Image
 

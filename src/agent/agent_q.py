@@ -1,4 +1,4 @@
-from agent.agent import Agent
+from agent import Agent
 
 
 class AgentQ(Agent):
