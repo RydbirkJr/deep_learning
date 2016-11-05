@@ -1,7 +1,9 @@
 import gym
 import numpy as np
 from src.agent.agent_policy import AgentPolicy
+from src.network.tensorflow_network import TFNetwork
 from src.network.network import Network
+
 
 # init environment
 env = gym.make('Pong-v0')
@@ -10,7 +12,7 @@ env = gym.make('Pong-v0')
 # shape = env.observation_space.shape
 shape = (None, env.observation_space.shape[0], env.observation_space.shape[1], env.observation_space.shape[2])
 
-network = Network(shape, env.action_space.n)
+network = TFNetwork(shape, env.action_space.n)
 agent = AgentPolicy(env, network)
 
 # train agent on the environment

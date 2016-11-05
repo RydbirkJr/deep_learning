@@ -1,6 +1,7 @@
 import time
 import gym
 from src.agent.agent_policy import AgentPolicy
+from src.network.tensorflow_network import TFNetwork
 from src.network.network import Network
 
 # init and run an example environment

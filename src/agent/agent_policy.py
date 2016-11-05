@@ -49,7 +49,6 @@ class AgentPolicy(Agent):
             all_advantages = np.concatenate(advs)
 
             # 5. do policy gradient update step
-
             loss = self.network.train(all_states, all_actions, all_advantages, learning_rate)
 
             train_rs = np.array([trajectory["reward"].sum() for trajectory in trajectories])  # trajectory total rewards
