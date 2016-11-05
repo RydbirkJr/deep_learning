@@ -1,7 +1,7 @@
 import lasagne
 import theano
 import theano.tensor as T
-from lasagne.layers import InputLayer, DenseLayer, Conv2DLayer
+from lasagne.layers import InputLayer, DenseLayer, Conv2DLayer, MaxPool2DLayer
 from lasagne.nonlinearities import leaky_rectify, softmax
 
 
@@ -12,13 +12,17 @@ class Network(object):
         self.sym_state = T.tensor4()
         self.sym_action = T.ivector()
         self.sym_advantage = T.fvector()
+        self.shape = shape
 
         # policy network
         l_in = InputLayer(shape=shape)
 
-        l_conv = Conv2DLayer(incoming=l_in, num_filters=10, filter_size=5, pad='same', stride=1)
+        l_conv1 = Conv2DLayer(incoming=l_in, num_filters=10, filter_size=5, pad='full', stride=1)
+        l_pool1 = MaxPool2DLayer(l_conv1, pool_size=3, stride=2)
+        l_conv2 = Conv2DLayer(incoming=l_pool1, num_filters=10, filter_size=5, pad='full', stride=1)
+        l_pool2 = MaxPool2DLayer(l_conv2, pool_size=3, stride=2)
 
-        l_hid = DenseLayer(incoming=l_conv, num_units=100, nonlinearity=leaky_rectify, name='hiddenlayer1')
+        l_hid = DenseLayer(incoming=l_pool2, num_units=100, nonlinearity=leaky_rectify, name='hiddenlayer1')
         l_out = DenseLayer(incoming=l_hid, num_units=number_of_ouputs, nonlinearity=softmax, name='outputlayer')
 
         # get network output

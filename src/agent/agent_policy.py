@@ -1,5 +1,6 @@
 from src.agent.agent import Agent
 import numpy as np
+from PIL import Image
 
 
 class AgentPolicy(Agent):
@@ -67,7 +68,7 @@ class AgentPolicy(Agent):
 
             # print stats
             print '%3d mean_train_r: %6.2f mean_val_r: %6.2f loss: %f' % (
-                epoch + 1, train_rs.mean(), val_reward.mean(), loss)
+                epoch + 1, train_rs.mean(), val_reward.mean(), loss*100000)
 
             # check for early stopping: true if the validation reward has not changed in n_early_stop epochs
             if early_stop and len(mean_val_rs) >= early_stop and \
@@ -80,12 +81,16 @@ class AgentPolicy(Agent):
         """
         time_limit = time_limit or self.environment.spec.timestep_limit
         state = self.environment.reset()
+        state = self._state_reshape(state)
 
         trajectory = {'state': [], 'action': [], 'reward': []}
 
         for _ in xrange(time_limit):
             action = self.get_action(state, deterministic)
             (state, reward, done, _) = self.environment.step(action)
+
+            state = self._state_reshape(state)
+            reward = 0.1 if reward == 0 else reward * 100
 
             trajectory['state'].append(state)
             trajectory['action'].append(action)
@@ -102,8 +107,11 @@ class AgentPolicy(Agent):
         Evaluate the agent policy to choose an action, a, given state, s.
         """
         # compute action probabilities
+        # print 'Shape of state input in action: ', state.shape
+        # print 'Shape of reshape 1,-1: ', state.reshape(1, -1).shape
+        # print 'Shape of expand_dims: ', np.expand_dims(np.expand_dims(state, axis=3), 0).shape
         #action_probabilities = self.network.evaluate(state.reshape(1, -1))
-        action_probabilities = self.network.evaluate(np.expand_dims(state, axis=0))
+        action_probabilities = self.network.evaluate(np.expand_dims(state, 0))
 
         if deterministic:
             # choose action with highest probability
@@ -121,5 +129,11 @@ class AgentPolicy(Agent):
         for i in reversed(xrange(len(reward) - 1)):
             reward_out[i] = reward[i] + gamma * reward_out[i + 1]
         return reward_out
+
+    def _state_reshape(self, state):
+        img = Image.fromarray(state, 'RGB').convert('L')
+        size = (self.network.shape[1], self.network.shape[1])
+        img.thumbnail(size, Image.ANTIALIAS)
+        return np.expand_dims(np.array(img), 3)
 
 Agent.register(AgentPolicy)
