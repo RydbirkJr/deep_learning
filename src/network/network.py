@@ -1,6 +1,7 @@
 import lasagne
 import theano
 import theano.tensor as T
+from lasagne.init import Constant
 from lasagne.layers import InputLayer, DenseLayer, Conv2DLayer, MaxPool2DLayer
 from lasagne.nonlinearities import leaky_rectify, softmax
 
@@ -17,13 +18,13 @@ class Network(object):
         # policy network
         l_in = InputLayer(shape=shape)
 
-        l_conv1 = Conv2DLayer(incoming=l_in, num_filters=10, filter_size=5, pad='full', stride=1)
+        l_conv1 = Conv2DLayer(incoming=l_in, W=Constant(1.0), num_filters=10, filter_size=5, pad='full', stride=1)
         l_pool1 = MaxPool2DLayer(l_conv1, pool_size=3, stride=2)
-        l_conv2 = Conv2DLayer(incoming=l_pool1, num_filters=10, filter_size=5, pad='full', stride=1)
+        l_conv2 = Conv2DLayer(incoming=l_pool1, W=Constant(1.0), num_filters=10, filter_size=5, pad='full', stride=1)
         l_pool2 = MaxPool2DLayer(l_conv2, pool_size=3, stride=2)
 
-        l_hid = DenseLayer(incoming=l_pool2, num_units=100, nonlinearity=leaky_rectify, name='hiddenlayer1')
-        l_out = DenseLayer(incoming=l_hid, num_units=number_of_ouputs, nonlinearity=softmax, name='outputlayer')
+        l_hid = DenseLayer(incoming=l_pool2, num_units=100, W=Constant(1.0), nonlinearity=leaky_rectify, name='hiddenlayer1')
+        l_out = DenseLayer(incoming=l_hid, W=Constant(1.0), num_units=number_of_ouputs, nonlinearity=softmax, name='outputlayer')
 
         # get network output
         eval_out = lasagne.layers.get_output(l_out, {l_in: self.sym_state}, deterministic=True)
@@ -37,7 +38,7 @@ class Network(object):
         # loss function that we'll differentiate to get the policy gradient
         #loss = -T.log(eval_out[T.arange(total_timesteps), sym_action]).dot(sym_advantage) / total_timesteps
 
-        loss = -T.log(eval_out[T.arange(total_timesteps), self.sym_action]).dot(self.sym_advantage) / total_timesteps
+        loss = T.log(eval_out[T.arange(total_timesteps), self.sym_action]).dot(self.sym_advantage) / total_timesteps
 
         # learning_rate
         learning_rate = T.fscalar()

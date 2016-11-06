@@ -23,9 +23,9 @@ print 'Completed policy'
 # train agent on the environment
 agent.learn(
     epochs=100,
-    learning_rate=0.01,
-    discount_factor=1,
-    states_per_batch=5000,
-    time_limit=2000,
-    early_stop=5
+    learning_rate=0.001,
+    discount_factor=0.99,
+    states_per_batch=20000,
+    time_limit=1000,
+    #early_stop=5
 )

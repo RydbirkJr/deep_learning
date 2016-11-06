@@ -22,7 +22,7 @@ class Agent(object):
               epochs=100,
               states_per_batch=10000,
               time_limit=None,
-              learning_rate=0.01,
+              learning_rate=0.001,
               discount_factor=1.0,
               early_stop=None):
         raise NotImplementedError()
