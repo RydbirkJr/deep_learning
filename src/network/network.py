@@ -21,7 +21,7 @@ class Network(object):
         l_conv1 = Conv2DLayer(incoming=l_in, num_filters=20, filter_size=5, pad='same', stride=2)
         l_conv2 = Conv2DLayer(incoming=l_conv1, num_filters=20, filter_size=5, pad='same', stride=2)
 
-        l_hid = DenseLayer(incoming=l_conv2, num_units=20, W=Constant(1.0), nonlinearity=leaky_rectify, name='hiddenlayer1')
+        l_hid = DenseLayer(incoming=l_conv2, num_units=20, nonlinearity=leaky_rectify, name='hiddenlayer1')
         l_out = DenseLayer(incoming=l_hid, W=Constant(1.0), num_units=number_of_ouputs, nonlinearity=softmax, name='outputlayer')
 
         # get network output
