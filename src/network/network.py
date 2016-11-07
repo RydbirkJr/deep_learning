@@ -19,11 +19,9 @@ class Network(object):
         l_in = InputLayer(shape=shape)
 
         l_conv1 = Conv2DLayer(incoming=l_in, W=Constant(1.0), num_filters=10, filter_size=5, pad='full', stride=1)
-        l_pool1 = MaxPool2DLayer(l_conv1, pool_size=3, stride=2)
-        l_conv2 = Conv2DLayer(incoming=l_pool1, W=Constant(1.0), num_filters=10, filter_size=5, pad='full', stride=1)
-        l_pool2 = MaxPool2DLayer(l_conv2, pool_size=3, stride=2)
+        l_conv2 = Conv2DLayer(incoming=l_conv1, W=Constant(1.0), num_filters=10, filter_size=5, pad='full', stride=1)
 
-        l_hid = DenseLayer(incoming=l_pool2, num_units=100, W=Constant(1.0), nonlinearity=leaky_rectify, name='hiddenlayer1')
+        l_hid = DenseLayer(incoming=l_conv2, num_units=100, W=Constant(1.0), nonlinearity=leaky_rectify, name='hiddenlayer1')
         l_out = DenseLayer(incoming=l_hid, W=Constant(1.0), num_units=number_of_ouputs, nonlinearity=softmax, name='outputlayer')
 
         # get network output

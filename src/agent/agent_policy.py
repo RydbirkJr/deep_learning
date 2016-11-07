@@ -97,9 +97,9 @@ class AgentPolicy(Agent):
 
             trajectory['state'].append(state)
             trajectory['action'].append(action)
-            trajectory['reward'].append(reward * 10)
+            trajectory['reward'].append(reward)
 
-            if done or reward < 0: break
+            if done: break
 
         return {'state': np.array(trajectory['state']),
                 'action': np.array(trajectory['action']),
