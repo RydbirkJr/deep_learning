@@ -21,7 +21,7 @@ class Network(object):
         l_conv1 = Conv2DLayer(incoming=l_in, W=Constant(1.0), num_filters=10, filter_size=5, pad='full', stride=1)
         l_conv2 = Conv2DLayer(incoming=l_conv1, W=Constant(1.0), num_filters=10, filter_size=5, pad='full', stride=1)
 
-        l_hid = DenseLayer(incoming=l_conv2, num_units=100, W=Constant(1.0), nonlinearity=leaky_rectify, name='hiddenlayer1')
+        l_hid = DenseLayer(incoming=l_conv2, num_units=20, W=Constant(1.0), nonlinearity=leaky_rectify, name='hiddenlayer1')
         l_out = DenseLayer(incoming=l_hid, W=Constant(1.0), num_units=number_of_ouputs, nonlinearity=softmax, name='outputlayer')
 
         # get network output
@@ -36,7 +36,7 @@ class Network(object):
         # loss function that we'll differentiate to get the policy gradient
         #loss = -T.log(eval_out[T.arange(total_timesteps), sym_action]).dot(sym_advantage) / total_timesteps
 
-        loss = T.log(eval_out[T.arange(total_timesteps), self.sym_action]).dot(self.sym_advantage) / total_timesteps
+        loss = -T.log(eval_out[T.arange(total_timesteps), self.sym_action]).dot(self.sym_advantage) / total_timesteps
 
         # learning_rate
         learning_rate = T.fscalar()

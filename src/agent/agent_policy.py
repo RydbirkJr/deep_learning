@@ -90,8 +90,8 @@ class AgentPolicy(Agent):
         for _ in xrange(time_limit):
             action = self.get_action(state, deterministic)
             (state, reward, done, _) = self.environment.step(action)
-            if deterministic:
-                self.environment.render()
+            #if deterministic:
+                #self.environment.render()
 
             state = self._state_reshape(state)
 
