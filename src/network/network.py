@@ -90,7 +90,7 @@ class Network(object):
         #print "s1 shape 0:",s1[0].shape[0]
         #print "len a:",len(a)
         #print "T shape a:", (np.transpose(a)).shape
-        print q2
+        #print q2
         #all_advantages = np.transpose(a).astype(np.int32)
         #print all_advantages.shape
         return self.fn_learn(all_states, all_actions, all_advantages, learning_rate)
