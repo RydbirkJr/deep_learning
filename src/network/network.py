@@ -73,7 +73,7 @@ class Network(object):
         '''
         # Compile the theano functions
         print "Compiling the network ..."
-        self.fn_learn = theano.function([self.sym_state, self.sym_q2, self.sym_action, self.sym_r], loss, updates=updates, name="learn_fn", on_unused_input="warn")
+        self.fn_learn = theano.function([self.sym_state, self.sym_q2, self.sym_action, self.sym_r], loss, updates=updates, name="learn_fn", on_unused_input="warn", allow_input_downcast=True)
         self.fn_get_q_values = theano.function([self.sym_state], self.q, name="eval_fn")
         self.fn_get_best_action = theano.function([self.sym_state], (self.q), name="test_fn")
         print "Network compiled."
