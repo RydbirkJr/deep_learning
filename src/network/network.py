@@ -2,7 +2,7 @@ import lasagne
 import theano
 import theano.tensor as T
 from lasagne.init import Constant, HeUniform
-from lasagne.layers import InputLayer, DenseLayer, Conv2DLayer, MaxPool2DLayer, get_output
+from lasagne.layers import InputLayer, DenseLayer, Conv2DLayer, get_output
 from lasagne.nonlinearities import leaky_rectify, softmax, sigmoid, tanh, elu, rectify
 from lasagne.objectives import squared_error
 from lasagne.updates import rmsprop, adam
