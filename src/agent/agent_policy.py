@@ -1,6 +1,7 @@
 from agent import Agent
 import numpy as np
 from PIL import Image
+import random
 
 
 class AgentPolicy(Agent):
@@ -31,11 +32,43 @@ class AgentPolicy(Agent):
             total_trajectories = 0
             total_games = 0
             while total_trajectories < states_per_batch:
+                print total_trajectories,"/",states_per_batch
                 trajectory = self.get_trajectory(time_limit, deterministic=False)
                 trajectories.append(trajectory)
                 total_trajectories += len(trajectory["reward"])
                 total_games += 1
 
+            ####TEST####
+            size = 1000
+            if(len(trajectories)<1000):
+                size = len(trajectories)
+            #print "size:", size
+            #print "len:", len(trajectories)
+            #s1, a, s2, r = random.sample(trajectories, size)
+            trajs = random.sample(trajectories, size)
+            s1 = []
+            s2 = []
+            a  = []
+            r  = []
+
+            for traj in trajs:
+                s1.extend(traj["state"])
+                s2.extend(traj["prev_state"])
+                a.extend(traj["action"])
+                r.extend(traj["reward"])
+
+            #print np.array(s2).shape
+            q2 = np.max(self.network.get_q(s2), axis=1)
+            q2 = np.array(q2)
+
+            # the value of q2 is ignored in learn if s2 is terminal
+            loss = self.network.train(s1, q2, a, r)
+
+            #print q2.mean()
+            ############
+
+
+            '''
             all_states = np.concatenate([trajectory["state"] for trajectory in trajectories])
 
             # 2. compute cumulative discounted rewards (returns)
@@ -59,18 +92,23 @@ class AgentPolicy(Agent):
             eplens = np.array([len(trajectory["reward"]) for trajectory in trajectories])  # trajectory lengths
 
             # compute validation reward
+            print "time limit: ", time_limit
             val_reward = np.array(
-                [self.get_trajectory(time_limit, deterministic=True)['reward'].sum() for _ in range(10)]
+                [self.get_trajectory(time_limit, deterministic=True)['reward'].sum() for _ in range(1)]
             )
 
             # update stats
             mean_train_rs.append(train_rs.mean())
             mean_val_rs.append(val_reward.mean())
             self.loss.append(loss)
+'''
 
+            val_reward = np.array(
+                [self.get_trajectory(time_limit, deterministic=True)['reward'].sum() for _ in range(1)]
+            )
             # print stats
-            print '%3d mean_train_r: %6.2f mean_val_r: %6.2f loss: %f games played: %3d' % (
-                epoch + 1, train_rs.mean(), val_reward.mean(), loss, total_games)
+            print '%3d mean reward: %2.2f loss: %2.10f games played: %3d' % (
+                epoch + 1, np.mean(val_reward), loss, total_games)
 
             # check for early stopping: true if the validation reward has not changed in n_early_stop epochs
             if early_stop and len(mean_val_rs) >= early_stop and \
@@ -85,25 +123,44 @@ class AgentPolicy(Agent):
         state = self.environment.reset()
         state = self._state_reshape(state)
 
-        trajectory = {'state': [], 'action': [], 'reward': []}
+        prev_state = list(state)
+
+        trajectory = {'state': [], 'action': [], 'reward': [], 'prev_state': []}
 
         for _ in xrange(time_limit):
             action = self.get_action(state, deterministic)
-            (state, reward, done, _) = self.environment.step(action)
-            #if deterministic:
-                #self.environment.render()
+            #state, reward, done, _ = self.environment.step(action)
+            for i in range(3):
+                state, reward, done, _ = self.environment.step(action)
+                if reward != 0:
+                    break;
+
+            #self.environment.render()
 
             state = self._state_reshape(state)
 
+            if deterministic:
+                #print action
+                self.environment.render()
+
             trajectory['state'].append(state)
             trajectory['action'].append(action)
-            trajectory['reward'].append(reward)
+            trajectory['reward'].append(reward+0.001)
+            trajectory['prev_state'].append(prev_state)
 
-            if done: break
+            prev_state = list(state)
+            if reward == 1:
+                print "REWARD"
+            if done:
+                break
+            if reward == -1:
+                break
 
+        #print np.array(trajectory['state']).shape
         return {'state': np.array(trajectory['state']),
                 'action': np.array(trajectory['action']),
-                'reward': np.array(trajectory['reward'])}
+                'reward': np.array(trajectory['reward']),
+                'prev_state': np.array(trajectory['prev_state'])}
 
     def get_action(self, state, deterministic=True):
         """
@@ -115,11 +172,13 @@ class AgentPolicy(Agent):
 
         if deterministic:
             # choose action with highest probability
+            print action_probabilities
             return action_probabilities.argmax()
         else:
             # sample action from cummulative distribution
-            #print np.asarray(action_probabilities)
-            return (np.cumsum(np.asarray(action_probabilities)) > np.random.rand()).argmax()
+            action = (np.cumsum(np.asarray(action_probabilities)) > np.random.rand()).argmax()
+            #print action
+            return action
 
     def _cumulative_discount(self, reward, gamma):
         """
@@ -132,9 +191,13 @@ class AgentPolicy(Agent):
         return reward_out
 
     def _state_reshape(self, state):
+        return state.reshape(3,210,160)
         img = Image.fromarray(state, 'RGB').convert('L')
-        size = (self.network.shape[1], self.network.shape[1])
+        size = (self.network.shape[3], self.network.shape[2])
         img.thumbnail(size, Image.ANTIALIAS)
-        return np.expand_dims(np.array(img), 3)
+        print np.array(img).shape
+        val = np.expand_dims(np.array(img), 3)
+        #val = val.reshape(0, 1, 110, 84)
+        return val
 
 Agent.register(AgentPolicy)
