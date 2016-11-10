@@ -141,7 +141,7 @@ class AgentPolicy(Agent):
 
             if deterministic:
                 #print action
-                self.environment.render()
+                #self.environment.render()
 
             trajectory['state'].append(state)
             trajectory['action'].append(action)
@@ -172,7 +172,7 @@ class AgentPolicy(Agent):
 
         if deterministic:
             # choose action with highest probability
-            #print action_probabilities
+            print action_probabilities
             return action_probabilities.argmax()
         else:
             # sample action from cummulative distribution
