@@ -195,7 +195,6 @@ class AgentPolicy(Agent):
         img = Image.fromarray(state, 'RGB').convert('L')
         size = (self.network.shape[3], self.network.shape[2])
         img.thumbnail(size, Image.ANTIALIAS)
-        print np.array(img).shape
         val = np.expand_dims(np.array(img), 3)
         #val = val.reshape(0, 1, 110, 84)
         return val
