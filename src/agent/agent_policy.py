@@ -139,7 +139,7 @@ class AgentPolicy(Agent):
 
             state = self._state_reshape(state)
 
-            if deterministic:
+            #if deterministic:
                 #print action
                 #self.environment.render()
 
