@@ -19,6 +19,7 @@ import skimage.color, skimage.transform
 from matplotlib import pyplot as plt
 from skimage import data
 
+
 class ReplayMemory:
     def __init__(self, capacity, resolution, channels):
         state_shape = (capacity, channels, resolution[0], resolution[1])
@@ -56,7 +57,7 @@ class Agent(object):
     OpenAI Gym by applying the policy gradient method.
     """
 
-    def __init__(self, env, colors=True, scale=1, discount_factor=0.99, learning_rate=0.00025, \
+    def __init__(self, env, actions, colors=True, scale=1, discount_factor=0.99, learning_rate=0.00025, \
                  replay_memory_size=100000, batch_size=64, cropping=(0, 0, 0, 0)):
 
         # Create the input variables
@@ -76,9 +77,11 @@ class Agent(object):
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
         self.batch_size = batch_size
-        self.actions = env.action_space
+        self.actions = actions
         self.scale = scale
         self.cropping = cropping
+
+        print self.resolution
 
         print("Resolution = " + str(self.resolution))
         print("Channels = " + str(self.channels))
@@ -89,13 +92,13 @@ class Agent(object):
         # policy network
         l_in = InputLayer(shape=(None, self.channels, self.resolution[0], self.resolution[1]), input_var=s1)
         l_conv1 = Conv2DLayer(l_in, num_filters=32, filter_size=[6, 6], nonlinearity=rectify, W=HeUniform("relu"),
-                      b=Constant(.1), stride=2)
+                              b=Constant(.1), stride=2)
         l_conv2 = Conv2DLayer(l_conv1, num_filters=64, filter_size=[3, 3], nonlinearity=rectify, W=HeUniform("relu"),
-                      b=Constant(.1), stride=1)
-        #l_conv3 = Conv2DLayer(l_conv2, num_filters=64, filter_size=[3, 3], nonlinearity=rectify, W=HeUniform("relu"),
+                              b=Constant(.1), stride=1)
+        # l_conv3 = Conv2DLayer(l_conv2, num_filters=64, filter_size=[3, 3], nonlinearity=rectify, W=HeUniform("relu"),
         #              b=Constant(.1), stride=1)
         l_hid1 = DenseLayer(l_conv2, num_units=128, nonlinearity=rectify, W=HeUniform("relu"), b=Constant(.1))
-        self.dqn = DenseLayer(l_hid1, num_units=self.actions.n, nonlinearity=None)
+        self.dqn = DenseLayer(l_hid1, num_units=len(self.actions), nonlinearity=None)
 
         # Define the loss function
         q = get_output(self.dqn)
@@ -155,11 +158,11 @@ class Agent(object):
         # With probability eps make a random action.
         eps = self.exploration_rate(epoch, epochs)
         if random() <= eps:
-            a = randint(0, self.actions.n - 1)
+            a = randint(0, len(self.actions) - 1)
         else:
             # Choose the best action according to the network.
             a = self.get_best_action(s1)
-        (s2, reward, isterminal, _) = env.step(a)  # TODO: Check a
+        (s2, reward, isterminal, _) = env.step(a + 1)  # TODO: Check a
         s2 = self.preprocess(s2)
         s3 = s2 if not isterminal else None
         if isterminal:
@@ -170,12 +173,12 @@ class Agent(object):
 
     def preprocess(self, img):
 
-        #plt.imshow(img)
+        # plt.imshow(img)
 
         # Crop
-        img = img[self.cropping[0]:len(img)-self.cropping[1], self.cropping[2]:len(img[0])-self.cropping[3], 0:]
+        img = img[self.cropping[0]:len(img) - self.cropping[1], self.cropping[2]:len(img[0]) - self.cropping[3], 0:]
 
-        #plt.imshow(img)
+        # plt.imshow(img)
 
         # Scaling
         if self.scale != 1:
@@ -183,9 +186,9 @@ class Agent(object):
 
         # Grayscale
         if self.channels == 1:
-            #plt.imshow(img)
+            # plt.imshow(img)
             img = skimage.color.rgb2gray(img)
-            #plt.imshow(img, cmap=plt.cm.gray)
+            # plt.imshow(img, cmap=plt.cm.gray)
             img = img[np.newaxis, ...]
         else:
             img = img.reshape(self.channels, self.resolution[0], self.resolution[1])
@@ -288,8 +291,9 @@ class Agent(object):
 env = gym.make('Breakout-v0')
 
 # init agent
-agent = Agent(env, colors=False, scale=1, cropping=(30, 10, 6, 6))
-#agent = Agent(env, colors=False, scale=.5, cropping=(30, 10, 6, 6))
+actions = [1, 2, 3]
+agent = Agent(env, actions, colors=False, scale=1, cropping=(30, 10, 6, 6))
+# agent = Agent(env, colors=False, scale=.5, cropping=(30, 10, 6, 6))
 # train agent on the environment
-agent.learn(render_training=True, render_test=False)
-#agent.learn(render_training=True, render_test=True, learning_steps_per_epoch=300)
+agent.learn(render_training=False, render_test=False)
+# agent.learn(render_training=True, render_test=True, learning_steps_per_epoch=300)
