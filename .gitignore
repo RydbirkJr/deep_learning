@@ -94,3 +94,5 @@ ENV/
 .idea/misc.xml
 .idea/vcs.xml
 .idea/workspace.xml
+src/atari-dqn/weights_backup.dump
+src/atari-dqn/weights.dump
