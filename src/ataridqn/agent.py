@@ -29,7 +29,7 @@ class Agent(object):
     """
 
     def __init__(self, env, colors=True, scale=1, discount_factor=0.99, learning_rate=0.00025, \
-                 replay_memory_size=100000, batch_size=32, cropping=(0, 0, 0, 0), weights_file=None):
+                 replay_memory_size=1000000, batch_size=32, cropping=(0, 0, 0, 0), weights_file=None):
 
         # Create the input variables
         s1 = T.tensor4("States")
