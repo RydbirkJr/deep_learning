@@ -3,7 +3,7 @@ import gym
 # init environment
 from src.ataridqn.agent import Agent
 
-env = gym.make('Breakout-v0')
+env = gym.make('Pong-v0')
 
 # init agent
 agent = Agent(env, colors=False, scale=0, cropping=(0, 0, 0, 0))
