@@ -94,3 +94,5 @@ ENV/
 .idea/misc.xml
 .idea/vcs.xml
 .idea/workspace.xml
+src/ataridqn/weights_backup.dump
+src/ataridqn/weights.dump
