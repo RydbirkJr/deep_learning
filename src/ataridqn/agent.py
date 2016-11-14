@@ -254,3 +254,4 @@ class Agent(object):
                     self.env.render()
                 frame += 1
             test_scores.append(score)
+        return test_scores
