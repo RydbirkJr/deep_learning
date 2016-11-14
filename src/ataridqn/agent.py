@@ -60,13 +60,13 @@ class Agent(object):
 
         # policy network
         l_in = InputLayer(shape=(None, self.channels, self.resolution[0], self.resolution[1]), input_var=s1)
-        l_conv1 = Conv2DLayer(l_in, num_filters=32, filter_size=[6, 6], nonlinearity=rectify, W=HeUniform("relu"),
+        l_conv1 = Conv2DLayer(l_in, num_filters=32, filter_size=[8, 8], nonlinearity=rectify, W=HeUniform("relu"),
+                              b=Constant(.1), stride=4)
+        l_conv2 = Conv2DLayer(l_conv1, num_filters=64, filter_size=[4, 4], nonlinearity=rectify, W=HeUniform("relu"),
                               b=Constant(.1), stride=2)
-        l_conv2 = Conv2DLayer(l_conv1, num_filters=64, filter_size=[3, 3], nonlinearity=rectify, W=HeUniform("relu"),
+        l_conv3 = Conv2DLayer(l_conv2, num_filters=64, filter_size=[3, 3], nonlinearity=rectify, W=HeUniform("relu"),
                               b=Constant(.1), stride=1)
-        # l_conv3 = Conv2DLayer(l_conv2, num_filters=64, filter_size=[3, 3], nonlinearity=rectify, W=HeUniform("relu"),
-        #              b=Constant(.1), stride=1)
-        l_hid1 = DenseLayer(l_conv2, num_units=128, nonlinearity=rectify, W=HeUniform("relu"), b=Constant(.1))
+        l_hid1 = DenseLayer(l_conv3, num_units=512, nonlinearity=rectify, W=HeUniform("relu"), b=Constant(.1))
         self.dqn = DenseLayer(l_hid1, num_units=self.actions.n, nonlinearity=None)
 
         if weights_file:
@@ -149,12 +149,8 @@ class Agent(object):
 
     def preprocess(self, img):
 
-        # plt.imshow(img)
-
         # Crop
         img = img[self.cropping[0]:len(img) - self.cropping[1], self.cropping[2]:len(img[0]) - self.cropping[3], 0:]
-
-        # plt.imshow(img)
 
         # Scaling
         if self.scale != 1:
@@ -173,7 +169,7 @@ class Agent(object):
         return img
 
     def learn(self, render_training=False, render_test=False, learning_steps_per_epoch=10000, \
-              test_episodes_per_epoch=1, epochs=200, max_test_steps=2000):
+              test_episodes_per_epoch=1, epochs=100, max_test_steps=2000):
 
         print "Starting the training!"
 
