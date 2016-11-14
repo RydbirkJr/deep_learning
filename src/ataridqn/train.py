@@ -1,5 +1,5 @@
 import gym
-from src.ataridqn.agent import Agent
+from agent import Agent
 
 # init environment
 env = gym.make('Pong-v0')

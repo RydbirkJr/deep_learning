@@ -17,7 +17,7 @@ from lasagne.objectives import squared_error
 from lasagne.updates import rmsprop
 from tqdm import trange
 
-from src.ataridqn.replay_memory import ReplayMemory
+from replay_memory import ReplayMemory
 
 
 class Agent(object):
