@@ -26,7 +26,7 @@ class Network(object):
         l_conv2 = Conv2DLayer(incoming=l_conv1, num_filters=20, filter_size=3, stride=1,
                               nonlinearity=rectify, W=Constant(1.0))
         l_hid = DenseLayer(incoming=l_conv2, num_units=100, W=Constant(1.0), nonlinearity=rectify, name='hiddenlayer1')
-        l_out = DenseLayer(incoming=l_hid, W=Constant(1), num_units=number_of_ouputs, nonlinearity=softmax,
+        l_out = DenseLayer(incoming=l_hid, W=Constant(1), num_units=number_of_ouputs, nonlinearity=None,
                            name='outputlayer')
 
         # get network output
@@ -40,7 +40,7 @@ class Network(object):
         # loss = -T.log(eval_out[T.arange(total_timesteps), sym_action]).dot(sym_advantage) / total_timesteps
 
         self.q = get_output(l_out)
-        self.target_q = T.set_subtensor(self.q[T.arange(self.q.shape[0]), self.sym_action], self.sym_r + 0.8 * (1 - 0) * self.sym_q2)
+        self.target_q = T.set_subtensor(self.q[T.arange(self.q.shape[0]), self.sym_action], self.sym_r + 0.99 * (1 - 0) * self.sym_q2)
         loss = squared_error(self.q, self.target_q).mean()
 
         # loss = -T.log(eval_out[T.arange(total_timesteps), self.sym_action]).dot(self.sym_advantage) / total_timesteps
@@ -56,7 +56,7 @@ class Network(object):
 
         # get trainable parameters in the network.
         params = lasagne.layers.get_all_params(l_out, trainable=True)
-        updates = adam(loss, params, learning_rate)
+        updates = rmsprop(loss, params, learning_rate)
 
         '''self.f_train = theano.function(
             [
@@ -102,7 +102,6 @@ class Network(object):
         # return self.f_eval(state)
 
     def get_q(self, state):
-
         q = self.fn_get_q_values(state)
         #print "q:",q
         return q

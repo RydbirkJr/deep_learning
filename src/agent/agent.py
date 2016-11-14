@@ -20,7 +20,7 @@ class Agent(object):
     @abstractmethod
     def learn(self,
               epochs=100,
-              states_per_batch=10000,
+              states_per_batch=1000,
               time_limit=None,
               learning_rate=0.001,
               discount_factor=1.0,
