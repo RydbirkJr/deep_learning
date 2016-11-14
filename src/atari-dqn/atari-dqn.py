@@ -1,23 +1,22 @@
 # -*- coding: utf-8 -*-
 
-import gym
-import numpy as np
-import itertools as it
-from time import time, sleep
 import pickle
 from random import sample, randint, random
+from time import time
+
+import gym
+import numpy as np
+import skimage.color
+import skimage.transform
 import theano
 import theano.tensor as T
-from lasagne.layers import Conv2DLayer, InputLayer, DenseLayer, get_output, \
-    get_all_params, get_all_param_values, set_all_param_values
 from lasagne.init import HeUniform, Constant
-from lasagne.nonlinearities import tanh, rectify
+from lasagne.layers import Conv2DLayer, InputLayer, DenseLayer, get_output, \
+    get_all_params, get_all_param_values
+from lasagne.nonlinearities import rectify
 from lasagne.objectives import squared_error
 from lasagne.updates import rmsprop
 from tqdm import trange
-import skimage.color, skimage.transform
-from matplotlib import pyplot as plt
-from skimage import data
 
 
 class ReplayMemory:
