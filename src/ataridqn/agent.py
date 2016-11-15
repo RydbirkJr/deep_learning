@@ -17,7 +17,7 @@ from lasagne.objectives import squared_error
 from lasagne.updates import rmsprop
 from tqdm import trange
 
-from src.ataridqn.replay_memory import ReplayMemory
+from replay_memory import ReplayMemory
 
 
 class Agent(object):
@@ -29,7 +29,7 @@ class Agent(object):
     """
 
     def __init__(self, env, colors=True, scale=1, discount_factor=0.99, learning_rate=0.00025, \
-                 replay_memory_size=100000, batch_size=64, cropping=(0, 0, 0, 0), weights_file=None):
+                 replay_memory_size=100000, batch_size=32, cropping=(0, 0, 0, 0), weights_file=None):
 
         # Create the input variables
         s1 = T.tensor4("States")
@@ -48,7 +48,7 @@ class Agent(object):
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
         self.batch_size = batch_size
-        self.actions = env.action_space
+        self.actions = 3 # env.action_space
         self.scale = scale
         self.cropping = cropping
 
@@ -60,14 +60,14 @@ class Agent(object):
 
         # policy network
         l_in = InputLayer(shape=(None, self.channels, self.resolution[0], self.resolution[1]), input_var=s1)
-        l_conv1 = Conv2DLayer(l_in, num_filters=32, filter_size=[6, 6], nonlinearity=rectify, W=HeUniform("relu"),
+        l_conv1 = Conv2DLayer(l_in, num_filters=32, filter_size=[8, 8], nonlinearity=rectify, W=HeUniform("relu"),
+                              b=Constant(.1), stride=4)
+        l_conv2 = Conv2DLayer(l_conv1, num_filters=64, filter_size=[4, 4], nonlinearity=rectify, W=HeUniform("relu"),
                               b=Constant(.1), stride=2)
-        l_conv2 = Conv2DLayer(l_conv1, num_filters=64, filter_size=[3, 3], nonlinearity=rectify, W=HeUniform("relu"),
+        l_conv3 = Conv2DLayer(l_conv2, num_filters=64, filter_size=[3, 3], nonlinearity=rectify, W=HeUniform("relu"),
                               b=Constant(.1), stride=1)
-        # l_conv3 = Conv2DLayer(l_conv2, num_filters=64, filter_size=[3, 3], nonlinearity=rectify, W=HeUniform("relu"),
-        #              b=Constant(.1), stride=1)
-        l_hid1 = DenseLayer(l_conv2, num_units=128, nonlinearity=rectify, W=HeUniform("relu"), b=Constant(.1))
-        self.dqn = DenseLayer(l_hid1, num_units=self.actions.n, nonlinearity=None)
+        l_hid1 = DenseLayer(l_conv3, num_units=512, nonlinearity=rectify, W=HeUniform("relu"), b=Constant(.1))
+        self.dqn = DenseLayer(l_hid1, num_units=self.actions, nonlinearity=None)
 
         if weights_file:
             self.load_weights(weights_file)
@@ -134,11 +134,11 @@ class Agent(object):
         # With probability eps make a random action.
         eps = self.exploration_rate(epoch, epochs)
         if random() <= eps:
-            a = randint(0, self.actions.n - 1)
+            a = randint(0, self.actions - 1)
         else:
             # Choose the best action according to the network.
             a = self.get_best_action(s1)
-        (s2, reward, isterminal, _) = self.env.step(a)  # TODO: Check a
+        (s2, reward, isterminal, _) = self.env.step(a+1)  # TODO: Check a
         s2 = self.preprocess(s2)
         s3 = s2 if not isterminal else None
         if isterminal:
@@ -149,12 +149,8 @@ class Agent(object):
 
     def preprocess(self, img):
 
-        # plt.imshow(img)
-
         # Crop
         img = img[self.cropping[0]:len(img) - self.cropping[1], self.cropping[2]:len(img[0]) - self.cropping[3], 0:]
-
-        # plt.imshow(img)
 
         # Scaling
         if self.scale != 1:
@@ -173,7 +169,7 @@ class Agent(object):
         return img
 
     def learn(self, render_training=False, render_test=False, learning_steps_per_epoch=10000, \
-              test_episodes_per_epoch=1, epochs=200, max_test_steps=2000):
+              test_episodes_per_epoch=1, epochs=100, max_test_steps=2000):
 
         print "Starting the training!"
 
@@ -250,7 +246,7 @@ class Agent(object):
             frame = 0
             while not isterminal and frame < max_test_steps:
                 a = self.get_best_action(s1)
-                (s2, reward, isterminal, _) = self.env.step(a)  # TODO: Check a
+                (s2, reward, isterminal, _) = self.env.step(a+1)  # TODO: Check a
                 s2 = self.preprocess(s2) if not isterminal else None
                 score += reward
                 s1 = s2
@@ -258,3 +254,4 @@ class Agent(object):
                     self.env.render()
                 frame += 1
             test_scores.append(score)
+        return test_scores
