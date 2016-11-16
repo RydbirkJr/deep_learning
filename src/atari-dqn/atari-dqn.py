@@ -16,6 +16,7 @@ from lasagne.objectives import squared_error
 from lasagne.updates import rmsprop
 from tqdm import trange
 import skimage.color, skimage.transform
+from PIL import Image
 from matplotlib import pyplot as plt
 from skimage import data
 
@@ -171,14 +172,16 @@ class Agent(object):
 
         return s2, reward, isterminal
 
-    def preprocess(self, img):
-
-        # plt.imshow(img)
+    def preprocess(self, img, early_return=False):
+        #plt.imshow(img)
 
         # Crop
         img = img[self.cropping[0]:len(img) - self.cropping[1], self.cropping[2]:len(img[0]) - self.cropping[3], 0:]
 
-        # plt.imshow(img)
+        #plt.imshow(img)
+
+        if early_return:
+            return img
 
         # Scaling
         if self.scale != 1:
@@ -192,9 +195,32 @@ class Agent(object):
             img = img[np.newaxis, ...]
         else:
             img = img.reshape(self.channels, self.resolution[0], self.resolution[1])
+
         img = img.astype(np.float32)
 
         return img
+
+    def test_preprocessing(self):
+        state = env.reset()
+
+        pre_img = Image.fromarray(state, 'RGB')
+        pre_img.show()
+
+        after_img = self.preprocess(state, early_return=True)
+        print 'after_img shape:', after_img.shape
+
+        after_img = Image.fromarray(after_img, 'RGB')
+
+        size = self.resolution
+
+        if self.channels == 1:
+            after_img = after_img.convert('L')
+
+        after_img.thumbnail(size, Image.ANTIALIAS)
+
+        after_img.show()
+
+
 
     def learn(self, render_training=False, render_test=False, learning_steps_per_epoch=10000, \
               test_episodes_per_epoch=1, epochs=200, max_test_steps=2000):
@@ -257,7 +283,7 @@ class Agent(object):
                 frame = 0
                 while not isterminal and frame < max_test_steps:
                     a = self.get_best_action(s1)
-                    (s2, reward, isterminal, _) = env.step(a)  # TODO: Check a
+                    (s2, reward, isterminal, _) = env.step(a + 1)  # TODO: Check a
                     s2 = self.preprocess(s2) if not isterminal else None
                     score += reward
                     s1 = s2
@@ -288,12 +314,19 @@ class Agent(object):
 
 
 # init environment
-env = gym.make('Breakout-v0')
+env = gym.make('Pong-v0')
 
 # init agent
 actions = [1, 2, 3]
 agent = Agent(env, actions, colors=False, scale=1, cropping=(30, 10, 6, 6))
+# agent.learn(render_training=False, render_test=False)
+
+agent.test_preprocessing()
+
 # agent = Agent(env, colors=False, scale=.5, cropping=(30, 10, 6, 6))
 # train agent on the environment
-agent.learn(render_training=False, render_test=False)
+
 # agent.learn(render_training=True, render_test=True, learning_steps_per_epoch=300)
+
+
+
