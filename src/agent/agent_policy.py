@@ -68,7 +68,6 @@ class AgentPolicy(Agent):
             ############
 
 
-            '''
             all_states = np.concatenate([trajectory["state"] for trajectory in trajectories])
 
             # 2. compute cumulative discounted rewards (returns)
@@ -89,7 +88,7 @@ class AgentPolicy(Agent):
             loss = self.network.train(all_states, all_actions, all_advantages, learning_rate)
 
             train_rs = np.array([trajectory["reward"].sum() for trajectory in trajectories])  # trajectory total rewards
-            eplens = np.array([len(trajectory["reward"]) for trajectory in trajectories])  # trajectory lengths
+            # eplens = np.array([len(trajectory["reward"]) for trajectory in trajectories])  # trajectory lengths
 
             # compute validation reward
             print "time limit: ", time_limit
@@ -101,21 +100,17 @@ class AgentPolicy(Agent):
             mean_train_rs.append(train_rs.mean())
             mean_val_rs.append(val_reward.mean())
             self.loss.append(loss)
-'''
 
-            val_reward = np.array(
-                [self.get_trajectory(time_limit, deterministic=True)['reward'].sum() for _ in range(1)]
-            )
             # print stats
             print '%3d mean reward: %2.2f loss: %2.10f games played: %3d' % (
-                epoch + 1, np.mean(val_reward), loss, total_games)
+                epoch + 1, val_reward.mean(), loss, total_games)
 
             # check for early stopping: true if the validation reward has not changed in n_early_stop epochs
             if early_stop and len(mean_val_rs) >= early_stop and \
                     all([x == mean_val_rs[-1] for x in mean_val_rs[-early_stop:-1]]):
                 break
 
-    def get_trajectory(self, time_limit=None, deterministic=True):
+    def get_trajectory(self, epoch, epocs, time_limit=None, deterministic=True):
         """
         Compute state by iteratively evaluating the agent policy on the environment.
         """
@@ -162,7 +157,7 @@ class AgentPolicy(Agent):
                 'reward': np.array(trajectory['reward']),
                 'prev_state': np.array(trajectory['prev_state'])}
 
-    def get_action(self, state, deterministic=True):
+    def get_action(self, state, epoch, epochs, deterministic=True):
         """
         Evaluate the agent policy to choose an action, a, given state, s.
         """
@@ -170,11 +165,12 @@ class AgentPolicy(Agent):
         #action_probabilities = self.network.evaluate(state.reshape(1, -1))
         action_probabilities = self.network.evaluate(np.expand_dims(state, 0))
 
+
         if deterministic:
             # choose action with highest probability
-            print action_probabilities
             return action_probabilities.argmax()
         else:
+            if
             # sample action from cummulative distribution
             action = (np.cumsum(np.asarray(action_probabilities)) > np.random.rand()).argmax()
             #print action
@@ -191,12 +187,11 @@ class AgentPolicy(Agent):
         return reward_out
 
     def _state_reshape(self, state):
-        return state.reshape(3,210,160)
         img = Image.fromarray(state, 'RGB').convert('L')
         size = (self.network.shape[3], self.network.shape[2])
         img.thumbnail(size, Image.ANTIALIAS)
         val = np.expand_dims(np.array(img), 3)
-        #val = val.reshape(0, 1, 110, 84)
+        val = val.reshape(0, 1, 110, 84)
         return val
 
-Agent.register(AgentPolicy)
+#Agent.register(AgentPolicy)

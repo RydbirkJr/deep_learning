@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
 
-import gym
-import numpy as np
-import itertools as it
-from time import time, sleep
 import pickle
 from random import sample, randint, random
+from time import time
+
+import gym
+import numpy as np
+import skimage.color
+import skimage.transform
 import theano
 import theano.tensor as T
-from lasagne.layers import Conv2DLayer, InputLayer, DenseLayer, get_output, \
-    get_all_params, get_all_param_values, set_all_param_values
 from lasagne.init import HeUniform, Constant
-from lasagne.nonlinearities import tanh, rectify
+from lasagne.layers import Conv2DLayer, InputLayer, DenseLayer, get_output, \
+    get_all_params, get_all_param_values
+from lasagne.nonlinearities import rectify
 from lasagne.objectives import squared_error
 from lasagne.updates import rmsprop
 from tqdm import trange
@@ -19,6 +21,7 @@ import skimage.color, skimage.transform
 from PIL import Image
 from matplotlib import pyplot as plt
 from skimage import data
+
 
 
 class ReplayMemory:
@@ -59,7 +62,7 @@ class Agent(object):
     """
 
     def __init__(self, env, actions, colors=True, scale=1, discount_factor=0.99, learning_rate=0.00025, \
-                 replay_memory_size=100000, batch_size=64, cropping=(0, 0, 0, 0)):
+                 replay_memory_size=300000, batch_size=64, cropping=(0, 0, 0, 0)):
 
         # Create the input variables
         s1 = T.tensor4("States")
@@ -319,11 +322,11 @@ env = gym.make('Pong-v0')
 # init agent
 actions = [1, 2, 3]
 agent = Agent(env, actions, colors=False, scale=1, cropping=(30, 10, 6, 6))
-# agent.learn(render_training=False, render_test=False)
+agent.learn(render_training=False, render_test=False, learning_steps_per_epoch=10000)
 
-agent.test_preprocessing()
+#agent.test_preprocessing()
 
-# agent = Agent(env, colors=False, scale=.5, cropping=(30, 10, 6, 6))
+#agent = Agent(env, colors=False, scale=.5, cropping=(30, 10, 6, 6))
 # train agent on the environment
 
 # agent.learn(render_training=True, render_test=True, learning_steps_per_epoch=300)
