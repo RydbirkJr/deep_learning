@@ -8,6 +8,7 @@ from lasagne.objectives import squared_error
 from lasagne.updates import rmsprop, adam
 import numpy as np
 
+
 class Network(object):
     def __init__(self, shape, number_of_ouputs):
         # symbolic variables for state, action, and advantage
@@ -32,33 +33,27 @@ class Network(object):
         # get network output
         eval_out = lasagne.layers.get_output(l_out, {l_in: self.sym_state}, deterministic=True)
 
-
         # get total number of timesteps
         total_timesteps = self.sym_state.shape[0]
 
         # loss function that we'll differentiate to get the policy gradient
-        # loss = -T.log(eval_out[T.arange(total_timesteps), sym_action]).dot(sym_advantage) / total_timesteps
-
-        self.q = get_output(l_out)
-        self.target_q = T.set_subtensor(self.q[T.arange(self.q.shape[0]), self.sym_action], self.sym_r + 0.8 * (1 - 0) * self.sym_q2)
-        loss = squared_error(self.q, self.target_q).mean()
-
-        # loss = -T.log(eval_out[T.arange(total_timesteps), self.sym_action]).dot(self.sym_advantage) / total_timesteps
+        loss = -T.log(eval_out[T.arange(total_timesteps), self.sym_action]).dot(self.sym_advantage) / total_timesteps
 
         # learning_rate
-        learning_rate = 0.001#T.fscalar()
+        learning_rate = T.fscalar()
 
-        # get gradients
-        #grads = T.grad(loss, params)
-        # update function
-
-        #updates = lasagne.updates.adam(grads, params, learning_rate=learning_rate)
 
         # get trainable parameters in the network.
         params = lasagne.layers.get_all_params(l_out, trainable=True)
-        updates = adam(loss, params, learning_rate)
 
-        '''self.f_train = theano.function(
+        # get gradients
+        grads = T.grad(loss, params)
+
+        # update function
+        updates = lasagne.updates.adam(grads, params, learning_rate=learning_rate)
+
+        print "Compiling the network ..."
+        self.f_train = theano.function(
             [
                 self.sym_state,
                 self.sym_action,
@@ -70,12 +65,6 @@ class Network(object):
             allow_input_downcast=True
         )
         self.f_eval = theano.function([self.sym_state], eval_out, allow_input_downcast=True)
-        '''
-        # Compile the theano functions
-        print "Compiling the network ..."
-        self.fn_learn = theano.function([self.sym_state, self.sym_q2, self.sym_action, self.sym_r], loss, updates=updates, name="learn_fn", on_unused_input="warn", allow_input_downcast=True)
-        self.fn_get_q_values = theano.function([self.sym_state], self.q, name="eval_fn")
-        self.fn_get_best_action = theano.function([self.sym_state], (self.q), name="test_fn")
         print "Network compiled."
 
     def train(self, all_states, all_actions, all_advantages, learning_rate):
@@ -93,16 +82,10 @@ class Network(object):
         #print q2
         #all_advantages = np.transpose(a).astype(np.int32)
         #print all_advantages.shape
-        return self.fn_learn(all_states, all_actions, all_advantages, learning_rate)
-        # return self.f_train(all_states, all_actions, all_advantages, learning_rate)
+        #return self.fn_learn(all_states, all_actions, all_advantages, learning_rate)
+        return self.f_train(all_states, all_actions, all_advantages, learning_rate)
 
     def evaluate(self, state):
-        e = self.fn_get_best_action(state)
-        return e
-        # return self.f_eval(state)
-
-    def get_q(self, state):
-
-        q = self.fn_get_q_values(state)
-        #print "q:",q
-        return q
+        #e = self.fn_get_best_action(state)
+        #return e
+        return self.f_eval(state)
