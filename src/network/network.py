@@ -19,16 +19,28 @@ class Network(object):
         self.sym_q2 = T.vector()
         self.shape = shape
 
-        # policy network
+        # Same policy network as Deep Q
         l_in = InputLayer(shape=shape, input_var=self.sym_state)
-
-        l_conv1 = Conv2DLayer(incoming=l_in, num_filters=10, filter_size=6, stride=2, nonlinearity=rectify,
-                              W=Constant(0.000001))
-        l_conv2 = Conv2DLayer(incoming=l_conv1, num_filters=20, filter_size=3, stride=1,
-                              nonlinearity=rectify, W=Constant(1.0))
-        l_hid = DenseLayer(incoming=l_conv2, num_units=100, W=Constant(1.0), nonlinearity=rectify, name='hiddenlayer1')
-        l_out = DenseLayer(incoming=l_hid, W=Constant(1), num_units=number_of_ouputs, nonlinearity=softmax,
+        l_conv1 = Conv2DLayer(l_in, num_filters=32, filter_size=[6, 6], nonlinearity=rectify, W=HeUniform("relu"),
+                              b=Constant(.1), stride=2)
+        l_conv2 = Conv2DLayer(l_conv1, num_filters=64, filter_size=[3, 3], nonlinearity=rectify, W=HeUniform("relu"),
+                              b=Constant(.1), stride=1)
+        # l_conv3 = Conv2DLayer(l_conv2, num_filters=64, filter_size=[3, 3], nonlinearity=rectify, W=HeUniform("relu"),
+        #              b=Constant(.1), stride=1)
+        l_hid1 = DenseLayer(l_conv2, num_units=128, nonlinearity=rectify, W=HeUniform("relu"), b=Constant(.1))
+        l_out = DenseLayer(incoming=l_hid1, W=Constant(1), num_units=number_of_ouputs, nonlinearity=softmax,
                            name='outputlayer')
+
+        # policy network
+        # l_in = InputLayer(shape=shape, input_var=self.sym_state)
+        #
+        # l_conv1 = Conv2DLayer(incoming=l_in, num_filters=10, filter_size=6, stride=2, nonlinearity=rectify,
+        #                       W=Constant(0.000001))
+        # l_conv2 = Conv2DLayer(incoming=l_conv1, num_filters=20, filter_size=3, stride=1,
+        #                       nonlinearity=rectify, W=Constant(1.0))
+        # l_hid = DenseLayer(incoming=l_conv2, num_units=100, W=Constant(1.0), nonlinearity=rectify, name='hiddenlayer1')
+        # l_out = DenseLayer(incoming=l_hid, W=Constant(1), num_units=number_of_ouputs, nonlinearity=softmax,
+        #                    name='outputlayer')
 
         # get network output
         eval_out = lasagne.layers.get_output(l_out, {l_in: self.sym_state}, deterministic=True)
