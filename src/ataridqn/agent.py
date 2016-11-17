@@ -51,6 +51,7 @@ class Agent(object):
         self.actions = 3 # env.action_space
         self.scale = scale
         self.cropping = cropping
+        self.continue_training = False # Overwritten if weights are given
 
         print("Resolution = " + str(self.resolution))
         print("Channels = " + str(self.channels))
@@ -71,6 +72,7 @@ class Agent(object):
 
         if weights_file:
             self.load_weights(weights_file)
+            self.continue_training = True
 
         # Define the loss function
         q = get_output(self.dqn)
@@ -115,8 +117,14 @@ class Agent(object):
         """# Define exploration rate change over time"""
         start_eps = 1.0
         end_eps = 0.1
-        const_eps_epochs = 0.01 * epochs  # 10% of learning time
-        eps_decay_epochs = 0.9 * epochs  # 60% of learning time
+        pct_random_rounds = 0.01
+
+        if self.continue_training:
+            start_eps = 0.15
+            pct_random_rounds = 0
+
+        const_eps_epochs = pct_random_rounds * epochs  # 10% of learning time
+        eps_decay_epochs = 0.9 * epochs  # 90% of learning time
 
         if epoch < const_eps_epochs:
             return start_eps
@@ -169,12 +177,13 @@ class Agent(object):
         return img
 
     def learn(self, render_training=False, render_test=False, learning_steps_per_epoch=10000, \
-              test_episodes_per_epoch=1, epochs=100, max_test_steps=2000):
+              test_episodes_per_epoch=1, epochs=100, max_test_steps=10000):
 
         print "Starting the training!"
 
         train_results = []
         test_results = []
+        best_result = -100 # Just low enough to ensure everything else will be better
 
         time_start = time()
         for epoch in range(epochs):
@@ -221,6 +230,12 @@ class Agent(object):
 
             test_scores = np.array(self.validate(test_episodes_per_epoch, max_test_steps, render_test))
 
+            if test_scores.max() > best_result:
+                print "New best result. Storing weights."
+                best_result = test_scores.max()
+                pickle.dump(get_all_param_values(self.dqn), open('best_weights.dump', "w"))
+
+
             print "Results: mean: %.1f±%.1f," % (
                 test_scores.mean(), test_scores.std()), "min: %.1f" % test_scores.min(), "max: %.1f" % test_scores.max()
 
@@ -234,8 +249,9 @@ class Agent(object):
             pickle.dump(get_all_param_values(self.dqn), open('weights.dump', "w"))
 
             print "Total elapsed time: %.2f minutes" % ((time() - time_start) / 60.0)
+            print "Best result so far: mean: %.1f" % (max([item[0] for item in test_results]))
 
-    def validate(self, test_episodes_per_epoch=1, max_test_steps=2000, render_test=False):
+    def validate(self, test_episodes_per_epoch=5, max_test_steps=10000, render_test=False):
         print "\nTesting..."
         test_scores = []
         for test_episode in trange(test_episodes_per_epoch):
