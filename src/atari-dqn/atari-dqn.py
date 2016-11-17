@@ -166,6 +166,7 @@ class Agent(object):
         else:
             # Choose the best action according to the network.
             a = self.get_best_action(s1)
+
         (s2, reward, isterminal, _) = env.step(a + 1)  # TODO: Check a
         s2 = self.preprocess(s2)
         s3 = s2 if not isterminal else None
@@ -210,7 +211,7 @@ class Agent(object):
         pre_img.show()
 
         after_img = self.preprocess(state, early_return=True)
-        print 'after_img shape:', after_img.shape
+        #print 'after_img shape:', after_img.shape
 
         after_img = Image.fromarray(after_img, 'RGB')
 
