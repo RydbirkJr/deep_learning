@@ -67,11 +67,12 @@ class AgentPolicy(Agent):
             all_actions = np.concatenate([trajectory["action"] for trajectory in trajectories])
             all_advantages = np.concatenate(advs)
 
+            print 'Updating network...'
             # 5. do policy gradient update step
             loss = self.network.train(all_states, all_actions, all_advantages, learning_rate)
 
             train_rs = np.array([trajectory["reward"].sum() for trajectory in trajectories])  # trajectory total rewards
-            eplens = np.array([len(trajectory["reward"]) for trajectory in trajectories])  # trajectory lengths
+            # eplens = np.array([len(trajectory["reward"]) for trajectory in trajectories])  # trajectory lengths
 
             print("Saving training results...")
             with open("train_results.txt", "w") as train_result_file:
@@ -108,7 +109,6 @@ class AgentPolicy(Agent):
             if early_stop and len(mean_val_rs) >= early_stop and \
                     all([x == mean_val_rs[-1] for x in mean_val_rs[-early_stop:-1]]):
                 break
-
 
     def get_trajectory(self, epoch, epochs, time_limit=None, deterministic=True, render=False):
         """
