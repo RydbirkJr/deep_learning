@@ -28,7 +28,7 @@ class Network(object):
         l_conv1 = Conv2DLayer(l_in, num_filters=16, filter_size=[8, 8], nonlinearity=rectify, stride=4)
         l_conv2 = Conv2DLayer(l_conv1, num_filters=32, filter_size=[4, 4], nonlinearity=rectify, stride=2)
         l_hid1 = DenseLayer(l_conv2, num_units=256, nonlinearity=rectify)
-        l_out = DenseLayer(incoming=l_hid1, W=Constant(1), num_units=number_of_outputs, nonlinearity=softmax,
+        self.l_out = DenseLayer(incoming=l_hid1, W=Constant(1), num_units=number_of_outputs, nonlinearity=softmax,
                            name='outputlayer')
 
         # policy network
@@ -43,7 +43,7 @@ class Network(object):
         #                    name='outputlayer')
 
         # get network output
-        eval_out = lasagne.layers.get_output(l_out, {l_in: self.sym_state}, deterministic=True)
+        eval_out = lasagne.layers.get_output(self.l_out, {l_in: self.sym_state}, deterministic=True)
 
         # get total number of timesteps
         total_timesteps = self.sym_state.shape[0]
@@ -56,7 +56,7 @@ class Network(object):
 
 
         # get trainable parameters in the network.
-        params = lasagne.layers.get_all_params(l_out, trainable=True)
+        params = lasagne.layers.get_all_params(self.l_out, trainable=True)
 
         # get gradients
         grads = T.grad(loss, params)

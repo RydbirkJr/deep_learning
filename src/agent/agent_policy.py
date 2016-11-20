@@ -4,6 +4,9 @@ from PIL import Image
 from random import random, randint, choice
 import skimage.color
 import skimage.transform
+from lasagne.layers import get_all_param_values
+import pickle
+from tqdm import tqdm
 
 
 class AgentPolicy(Agent):
@@ -27,21 +30,27 @@ class AgentPolicy(Agent):
         print "Start training using %d epochs, %d states per batch, %d timelimit, %1.5f learning rate" % (epochs,
             states_per_batch, time_limit, learning_rate)
 
+        best_result = -100  # Just low enough to ensure everything else will be better
+
         for epoch in xrange(epochs):
 
             # 1. collect trajectories until we have at least states_per_batch total timesteps
             trajectories = []
             total_trajectories = 0
             total_games = 0
-            steps_since_last = 0
-            while total_trajectories < states_per_batch:
-                trajectory = self.get_trajectory(epoch, epochs, time_limit, deterministic=False)
-                trajectories.append(trajectory)
-                total_trajectories += len(trajectory["reward"])
-                total_games += 1
-                if (total_trajectories / 5000) > steps_since_last:
-                    steps_since_last = (total_trajectories / 5000)
-                    print '{0} steps processed'.format(total_trajectories)
+            with tqdm(total=states_per_batch) as pbar:
+                while total_trajectories < states_per_batch:
+                    trajectory = self.get_trajectory(epoch, epochs, time_limit, deterministic=False)
+                    trajectories.append(trajectory)
+                    length = len(trajectory["reward"])
+                    total_trajectories += length
+                    total_games += 1
+                    pbar.update(length)
+                    # if (total_trajectories / 5000) > steps_since_last:
+                    #     steps_since_last = (total_trajectories / 5000)
+                    #     print '{0} steps processed'.format(total_trajectories)
+
+            print 'Finished collecting trajectories.'
 
             all_states = np.concatenate([trajectory["state"] for trajectory in trajectories])
 
@@ -64,6 +73,11 @@ class AgentPolicy(Agent):
             train_rs = np.array([trajectory["reward"].sum() for trajectory in trajectories])  # trajectory total rewards
             eplens = np.array([len(trajectory["reward"]) for trajectory in trajectories])  # trajectory lengths
 
+            print("Saving training results...")
+            with open("train_results.txt", "w") as train_result_file:
+                train_result_file.write(str((train_rs.mean())))
+
+            print "\nTesting..."
             # compute validation reward
             val_reward = np.array(
                 [self.get_trajectory(epoch, epochs, time_limit, deterministic=True, render=False)['reward'].sum() for _ in range(1)]
@@ -74,6 +88,18 @@ class AgentPolicy(Agent):
             mean_val_rs.append(val_reward.mean())
             self.loss.append(loss)
 
+            if val_reward.max() > best_result:
+                print "New best result. Storing weights."
+                best_result = val_reward.max()
+                pickle.dump(get_all_param_values(self.network.l_out), open('best_weights.dump', "w"))
+
+            print("Saving test results...")
+            with open("test_results.txt", "w") as test_result_file:
+                test_result_file.write(str((val_reward.mean())))
+
+            print "Saving the network weights..."
+            pickle.dump(get_all_param_values(self.network.l_out), open('weights.dump', "w"))
+
             # print stats
             print '%3d mean_train_r: %6.2f mean_val_r: %6.2f loss: %f games played: %3d' % (
                 epoch + 1, train_rs.mean(), val_reward.mean(), loss, total_games)
@@ -82,6 +108,7 @@ class AgentPolicy(Agent):
             if early_stop and len(mean_val_rs) >= early_stop and \
                     all([x == mean_val_rs[-1] for x in mean_val_rs[-early_stop:-1]]):
                 break
+
 
     def get_trajectory(self, epoch, epochs, time_limit=None, deterministic=True, render=False):
         """

@@ -258,7 +258,7 @@ class Agent(object):
             with open("test_results.txt", "w") as test_result_file:
                 test_result_file.write(str(test_results))
 
-            print "Saving the network weigths..."
+            print "Saving the network weights..."
             pickle.dump(get_all_param_values(self.dqn), open('weights.dump', "w"))
 
             print "Total elapsed time: %.2f minutes" % ((time() - time_start) / 60.0)

@@ -24,7 +24,7 @@ agent.learn(
     epochs=500,
     learning_rate=0.00025,
     discount_factor=0.99,
-    states_per_batch=200000,
+    states_per_batch=15000,
     time_limit=10000,
     #early_stop=5
 )
