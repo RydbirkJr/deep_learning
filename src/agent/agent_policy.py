@@ -1,7 +1,9 @@
 from agent import Agent
 import numpy as np
 from PIL import Image
-from random import random, randint
+from random import random, randint, choice
+import skimage.color
+import skimage.transform
 
 
 class AgentPolicy(Agent):
@@ -86,20 +88,22 @@ class AgentPolicy(Agent):
         Compute state by iteratively evaluating the agent policy on the environment.
         """
         time_limit = time_limit or self.environment.spec.timestep_limit
-        state = self.environment.reset()
-        state = self._state_reshape(state)
+
+        # Get stacked initial state
+        s1 = self.env_reset()
 
         trajectory = {'state': [], 'action': [], 'reward': []}
 
         for _ in xrange(time_limit):
-            action = self.get_action(epoch, epochs, state, deterministic)
-            (state, reward, done, _) = self.environment.step(action + 1)
+            action = self.get_action(epoch, epochs, s1, deterministic)
+            (s2, reward, done, _) = self.environment.step(action + 1)
             if render:
                 self.environment.render()
 
-            state = self._state_reshape(state)
+            s2 = self.preprocess(s2)
+            s2 = self.add_new_state_to_current(s1, s2)
 
-            trajectory['state'].append(state)
+            trajectory['state'].append(s2)
             trajectory['action'].append(action)
             trajectory['reward'].append(reward)
 
@@ -163,10 +167,62 @@ class AgentPolicy(Agent):
             reward_out[i] = reward[i] + gamma * reward_out[i + 1]
         return reward_out
 
-    def _state_reshape(self, state):
-        img = Image.fromarray(state, 'RGB').convert('L')
-        size = (self.network.shape[2], self.network.shape[2])
-        img.thumbnail(size, Image.ANTIALIAS)
-        return np.expand_dims(np.array(img), 0)
+    def env_reset(self):
+        s1 = self.environment.reset()
+        s2, _, _, _ = self.environment.step(choice([1, 2, 3]))
+        s3, _, _, _ = self.environment.step(choice([1, 2, 3]))
+
+        res = np.zeros(shape=self.get_state_shape())
+        res = res.astype(np.float32)
+
+        res[0] = self.preprocess(s1)
+        res[1] = self.preprocess(s2)
+        res[2] = self.preprocess(s3)
+
+        return res
+
+    def get_state_shape(self):
+        return self.network.shape[1], self.network.shape[2], self.network.shape[3]
+
+    def preprocess(self, img):
+        # Crop
+        img = img[self.network.cropping[0]:len(img) - self.network.cropping[1], self.network.cropping[2]:len(img[0]) - self.network.cropping[3], 0:]
+
+        # # Scaling
+        # if self.scale != 1:
+        #     img = skimage.transform.rescale(img, self.scale)
+
+        # This is moved here because of the redef of channels.
+        img = skimage.color.rgb2gray(img)
+
+        # This is out because of the redef of channels
+        # Grayscale
+        # if self.channels == 1:
+            # plt.imshow(img)
+            # img = skimage.color.rgb2gray(img)
+            # plt.imshow(img, cmap=plt.cm.gray)
+            # img = img[np.newaxis, ...]
+        # else:
+        #     img = img.reshape(self.channels, self.resolution[0], self.resolution[1])
+
+        img = img.astype(np.float32)
+
+        return img
+
+    def add_new_state_to_current(self, s1, s2):
+        res = np.zeros(shape=self.get_state_shape())
+        res = res.astype(np.float32)
+
+        res[0] = s1[1]
+        res[1] = s1[2]
+        res[2] = s2
+
+        return res
+
+    # def _state_reshape(self, state):
+    #     img = Image.fromarray(state, 'RGB').convert('L')
+    #     size = (self.network.shape[2], self.network.shape[2])
+    #     img.thumbnail(size, Image.ANTIALIAS)
+    #     return np.expand_dims(np.array(img), 0)
 
 Agent.register(AgentPolicy)

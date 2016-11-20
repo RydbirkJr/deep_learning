@@ -10,25 +10,25 @@ import numpy as np
 
 
 class Network(object):
-    def __init__(self, shape, number_of_ouputs):
+    def __init__(self, resolution, number_of_outputs, cropping):
         # symbolic variables for state, action, and advantage
         self.sym_state = T.tensor4()
         self.sym_action = T.vector("Actions", dtype="int32")
         self.sym_advantage = T.vector("Advantages", dtype="int32")
         self.sym_r = T.vector()
         self.sym_q2 = T.vector()
-        self.shape = shape
+        self.shape = (None, 3,
+                      (resolution[0] - cropping[0] - cropping[1]),
+                      (resolution[1] - cropping[2] - cropping[3]))
+
+        self.cropping = cropping
 
         # Same policy network as Deep Q
-        l_in = InputLayer(shape=shape, input_var=self.sym_state)
-        l_conv1 = Conv2DLayer(l_in, num_filters=32, filter_size=[6, 6], nonlinearity=rectify, W=HeUniform("relu"),
-                              b=Constant(.1), stride=2)
-        l_conv2 = Conv2DLayer(l_conv1, num_filters=64, filter_size=[3, 3], nonlinearity=rectify, W=HeUniform("relu"),
-                              b=Constant(.1), stride=1)
-        # l_conv3 = Conv2DLayer(l_conv2, num_filters=64, filter_size=[3, 3], nonlinearity=rectify, W=HeUniform("relu"),
-        #              b=Constant(.1), stride=1)
-        l_hid1 = DenseLayer(l_conv2, num_units=128, nonlinearity=rectify, W=HeUniform("relu"), b=Constant(.1))
-        l_out = DenseLayer(incoming=l_hid1, W=Constant(1), num_units=number_of_ouputs, nonlinearity=softmax,
+        l_in = InputLayer(shape=self.shape, input_var=self.sym_state)
+        l_conv1 = Conv2DLayer(l_in, num_filters=16, filter_size=[8, 8], nonlinearity=rectify, stride=4)
+        l_conv2 = Conv2DLayer(l_conv1, num_filters=32, filter_size=[4, 4], nonlinearity=rectify, stride=2)
+        l_hid1 = DenseLayer(l_conv2, num_units=256, nonlinearity=rectify)
+        l_out = DenseLayer(incoming=l_hid1, W=Constant(1), num_units=number_of_outputs, nonlinearity=softmax,
                            name='outputlayer')
 
         # policy network
