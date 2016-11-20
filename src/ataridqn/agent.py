@@ -16,7 +16,6 @@ from lasagne.nonlinearities import rectify
 from lasagne.objectives import squared_error
 from lasagne.updates import rmsprop
 from tqdm import trange
-from lasagne.layers.cuda_convnet import Conv2DCCLayer
 from replay_memory import ReplayMemory
 
 
@@ -271,7 +270,7 @@ class Agent(object):
         s3, _, _, _ = self.env.step(choice([1, 2, 3]))
 
         res = np.zeros(shape=(self.channels, self.resolution[0], self.resolution[1]))
-        res.astype(np.float32)
+        res = res.astype(np.float32)
 
         res[0] = self.preprocess(s1)
         res[1] = self.preprocess(s2)
