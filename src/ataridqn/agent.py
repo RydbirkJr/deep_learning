@@ -280,7 +280,7 @@ class Agent(object):
 
     def add_new_state_to_current(self, s1, s2):
         res = np.zeros(shape=(self.channels, self.resolution[0], self.resolution[1]))
-        res.astype(np.float32)
+        res = res.astype(np.float32)
 
         res[0] = s1[1]
         res[1] = s1[2]
