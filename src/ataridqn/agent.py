@@ -37,13 +37,6 @@ class Agent(object):
         r = T.vector("Rewards")
         isterminal = T.vector("IsTerminal", dtype="int8")
 
-        # Set field values
-        # Outcommented because we just wont use colors..
-        # if colors:
-        #     self.channels = 3
-        # else:
-        #     self.channels = 1
-
         self.resolution = ((env.observation_space.shape[0] - cropping[0] - cropping[1]) * scale,
                            (env.observation_space.shape[1] - cropping[2] - cropping[3]) * scale)
         self.learning_rate = learning_rate
@@ -53,7 +46,7 @@ class Agent(object):
         self.scale = scale
         self.cropping = cropping
         self.continue_training = False  # Overwritten if weights are given
-        self.channels = 1  #Channels because we stack frames
+        self.channels = 3  # Channels because we stack frames
 
         print("Resolution = " + str(self.resolution))
         print("Channels = " + str(self.channels))
@@ -250,27 +243,27 @@ class Agent(object):
             with open("train_results.txt", "w") as train_result_file:
                 train_result_file.write(str(train_results))
 
-            #test_scores = np.array(self.validate(test_episodes_per_epoch, max_test_steps, render_test))
+            test_scores = np.array(self.validate(test_episodes_per_epoch, max_test_steps, render_test))
 
-            #if test_scores.max() > best_result:
-            #    print "New best result. Storing weights."
-            #    best_result = test_scores.max()
-            #    pickle.dump(get_all_param_values(self.dqn), open('best_weights.dump', "w"))
+            if test_scores.max() > best_result:
+                print "New best result. Storing weights."
+                best_result = test_scores.max()
+                pickle.dump(get_all_param_values(self.dqn), open('best_weights.dump', "w"))
 
-            #print "Results: mean: %.1f±%.1f," % (
-            #    test_scores.mean(), test_scores.std()), "min: %.1f" % test_scores.min(), "max: %.1f" % test_scores.max()
+            print "Results: mean: %.1f±%.1f," % (
+               test_scores.mean(), test_scores.std()), "min: %.1f" % test_scores.min(), "max: %.1f" % test_scores.max()
 
-            #test_results.append((test_scores.mean(), test_scores.std()))
+            test_results.append((test_scores.mean(), test_scores.std()))
 
-            #print("Saving test results...")
-            #with open("test_results.txt", "w") as test_result_file:
-            #    test_result_file.write(str(test_results))
+            print("Saving test results...")
+            with open("test_results.txt", "w") as test_result_file:
+                test_result_file.write(str(test_results))
 
             print "Saving the network weights..."
             pickle.dump(get_all_param_values(self.dqn), open('weights.dump', "w"))
 
             print "Total elapsed time: %.2f minutes" % ((time() - time_start) / 60.0)
-            #print "Best result so far: mean: %.1f" % (max([item[0] for item in test_results]))
+            print "Best result so far: mean: %.1f, overall: %.1f" % (max([item[0] for item in test_results]), best_result)
 
         # update dqn_hat at the end of every epoch
         set_all_param_values(self.dqn_hat, get_all_param_values(self.dqn))
