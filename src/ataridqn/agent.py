@@ -224,6 +224,7 @@ class Agent(object):
                 if isterminal:
                     train_scores.append(score)
                     s1 = self.env.reset()
+                    s1 = self.preprocess(s1)
                     train_episodes_finished += 1
                     score = 0
 
