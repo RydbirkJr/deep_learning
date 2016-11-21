@@ -61,13 +61,8 @@ class Agent(object):
         # Create replay memory which will store the transitions
         self.memory = ReplayMemory(capacity=replay_memory_size, resolution=self.resolution, channels=self.channels)
 
-        # policy network
-        l_in = InputLayer(shape=(None, self.channels, self.resolution[0], self.resolution[1]), input_var=s1)
-        l_conv1 = Conv2DLayer(l_in, num_filters=64, filter_size=[8, 8], nonlinearity=rectify, stride=4)
-        l_conv2 = Conv2DLayer(l_conv1, num_filters=32, filter_size=[4, 4], nonlinearity=rectify, stride=2)
-        l_conv3 = Conv2DLayer(l_conv2, num_filters=16, filter_size=[3, 3], nonlinearity=rectify, stride=1)
-        l_hid1 = DenseLayer(l_conv3, num_units=256, nonlinearity=rectify)
-        self.dqn = DenseLayer(l_hid1, num_units=self.actions, nonlinearity=None)
+        self.dqn = self.create_network(s1)
+        self.dqn_hat = self.create_network(s1)
 
         if weights_file:
             self.load_weights(weights_file)
@@ -75,22 +70,36 @@ class Agent(object):
 
         # Define the loss function
         q = get_output(self.dqn)
+        q_hat = get_output(self.dqn_hat)
+
         # target differs from q only for the selected action. The following means:
         # target_Q(s,a) = r + gamma * max Q(s2,_) if isterminal else r
         target_q = T.set_subtensor(q[T.arange(q.shape[0]), a], r + discount_factor * (1 - isterminal) * q2)
+        target_q_hat = T.set_subtensor(q_hat[T.arange(q_hat.shape[0]), a], r + discount_factor * (1 - isterminal) * q2)
         loss = squared_error(q, target_q).mean()
+        loss_hat = squared_error(q, target_q_hat).mean()
 
         # Update the parameters according to the computed gradient using RMSProp.
         params = get_all_params(self.dqn, trainable=True)
-        updates = rmsprop(loss, params, learning_rate)
+        # updates = rmsprop(loss, params, learning_rate)
+        updates = rmsprop(loss_hat, params, learning_rate)
 
         # Compile the theano functions
         print "Compiling the network ..."
-        self.fn_learn = theano.function([s1, q2, a, r, isterminal], loss, updates=updates, name="learn_fn")
-        self.fn_get_q_values = theano.function([s1], q, name="eval_fn")
+        self.fn_learn = theano.function([s1, q2, a, r, isterminal], loss_hat, updates=updates, name="learn_fn")
+        self.fn_get_q_values = theano.function([s1], q_hat, name="eval_fn")
         self.fn_get_best_action = theano.function([s1], T.argmax(q), name="test_fn")
         print "Network compiled."
         self.env = env
+
+    def create_network(self, s1):
+        # policy network
+        l_in = InputLayer(shape=(None, self.channels, self.resolution[0], self.resolution[1]), input_var=s1)
+        l_conv1 = Conv2DLayer(l_in, num_filters=64, filter_size=[8, 8], nonlinearity=rectify, stride=4)
+        l_conv2 = Conv2DLayer(l_conv1, num_filters=32, filter_size=[4, 4], nonlinearity=rectify, stride=2)
+        l_conv3 = Conv2DLayer(l_conv2, num_filters=16, filter_size=[3, 3], nonlinearity=rectify, stride=1)
+        l_hid1 = DenseLayer(l_conv3, num_units=512, nonlinearity=rectify)
+        return DenseLayer(l_hid1, num_units=self.actions, nonlinearity=None)
 
     def load_weights(self, filename):
         set_all_param_values(self.dqn, np.load(str(filename)))
@@ -241,28 +250,30 @@ class Agent(object):
             with open("train_results.txt", "w") as train_result_file:
                 train_result_file.write(str(train_results))
 
-            test_scores = np.array(self.validate(test_episodes_per_epoch, max_test_steps, render_test))
+            #test_scores = np.array(self.validate(test_episodes_per_epoch, max_test_steps, render_test))
 
-            if test_scores.max() > best_result:
-                print "New best result. Storing weights."
-                best_result = test_scores.max()
-                pickle.dump(get_all_param_values(self.dqn), open('best_weights.dump', "w"))
+            #if test_scores.max() > best_result:
+            #    print "New best result. Storing weights."
+            #    best_result = test_scores.max()
+            #    pickle.dump(get_all_param_values(self.dqn), open('best_weights.dump', "w"))
 
+            #print "Results: mean: %.1f±%.1f," % (
+            #    test_scores.mean(), test_scores.std()), "min: %.1f" % test_scores.min(), "max: %.1f" % test_scores.max()
 
-            print "Results: mean: %.1f±%.1f," % (
-                test_scores.mean(), test_scores.std()), "min: %.1f" % test_scores.min(), "max: %.1f" % test_scores.max()
+            #test_results.append((test_scores.mean(), test_scores.std()))
 
-            test_results.append((test_scores.mean(), test_scores.std()))
-
-            print("Saving test results...")
-            with open("test_results.txt", "w") as test_result_file:
-                test_result_file.write(str(test_results))
+            #print("Saving test results...")
+            #with open("test_results.txt", "w") as test_result_file:
+            #    test_result_file.write(str(test_results))
 
             print "Saving the network weights..."
             pickle.dump(get_all_param_values(self.dqn), open('weights.dump', "w"))
 
             print "Total elapsed time: %.2f minutes" % ((time() - time_start) / 60.0)
-            print "Best result so far: mean: %.1f" % (max([item[0] for item in test_results]))
+            #print "Best result so far: mean: %.1f" % (max([item[0] for item in test_results]))
+
+        # update dqn_hat at the end of every epoch
+        set_all_param_values(self.dqn_hat, get_all_param_values(self.dqn))
 
     def env_reset(self):
         s1 = self.env.reset()
