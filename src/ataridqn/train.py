@@ -11,5 +11,5 @@ agent = Agent(env, batch_size=64, replay_memory_size=100000, scale=1, cropping=(
 
 #agent.learn(epochs=2, render_test=True, max_test_steps=5000, learning_steps_per_epoch=2000)
 
-agent.learn(epochs=500, render_training=False, render_test=False, learning_steps_per_epoch=100)
+agent.learn(epochs=500, render_training=False, render_test=False, learning_steps_per_epoch=10000)
 # agent.learn(render_training=True, render_test=True, learning_steps_per_epoch=300)
