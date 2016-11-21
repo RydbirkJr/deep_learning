@@ -211,7 +211,7 @@ class Agent(object):
             #s1 = self.preprocess(s1)
 
             # Because s1 contains the first 3 states
-            for learning_step in trange(2, learning_steps_per_epoch):
+            for learning_step in trange(learning_steps_per_epoch):
                 s2, reward, isterminal = self.perform_learning_step(epoch, epochs, s1)
                 '''
                 a = self.get_best_action(s1)
