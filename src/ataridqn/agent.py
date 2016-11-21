@@ -223,7 +223,7 @@ class Agent(object):
                     self.env.render()
                 if isterminal:
                     train_scores.append(score)
-                    s1 = self.env_reset()
+                    s1 = self.env.reset()
                     train_episodes_finished += 1
                     score = 0
 
