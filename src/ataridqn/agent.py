@@ -292,7 +292,8 @@ class Agent(object):
         print "\nTesting..."
         test_scores = []
         for test_episode in trange(test_episodes_per_epoch):
-            s1 = self.env_reset()
+            s1 = self.env.reset()
+            s1 = self.preprocess(s1)
             score = 0
             isterminal = False
             frame = 0
@@ -302,7 +303,7 @@ class Agent(object):
 
                 # I think this covers the statement bellow
                 if not isterminal:
-                    s2 = self.add_new_state_to_current(s1, self.preprocess(s2))
+                    s2 = self.preprocess(s2)
                 else:
                     s2 = None
 
