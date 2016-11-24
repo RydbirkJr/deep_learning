@@ -28,10 +28,10 @@ class Agent(object):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_trajectory(self, time_limit=None, deterministic=True):
+    def get_trajectory(self, epoch, epochs, time_limit=None, deterministic=True):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_action(self, state, deterministic=True):
+    def get_action(self, epoch, epochs, state, deterministic=True):
         raise NotImplementedError()
 

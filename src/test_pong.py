@@ -14,7 +14,10 @@ env = gym.make('Pong-v0')
 #shape = (None, 110, 84, 1)
 shape = (None, 1, 110, 84)
 
-network = Network(shape, env.action_space.n)
+cropping = (30, 10, 6, 6)
+
+
+network = Network(resolution=env.observation_space.shape, number_of_outputs=3, cropping=cropping)
 print 'Completed network'
 agent = AgentPolicy(env, network)
 print 'Completed policy'
@@ -22,10 +25,10 @@ print 'Completed policy'
 
 # train agent on the environment
 agent.learn(
-    epochs=100,
-    learning_rate=0.001,
+    epochs=500,
+    learning_rate=0.00025,
     discount_factor=0.99,
-    states_per_batch=5000,
-    time_limit=1000,
+    states_per_batch=15000,
+    time_limit=10000,
     #early_stop=5
 )
