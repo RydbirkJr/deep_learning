@@ -55,8 +55,8 @@ class Agent(object):
         # Create replay memory which will store the transitions
         self.memory = ReplayMemory(capacity=replay_memory_size, resolution=self.resolution, channels=self.channels)
 
-        self.dqn = self.create_network(s1)
-        self.dqn_hat = self.create_network(s1)
+        self.dqn, _ = self.create_network(s1)
+        self.dqn_hat, self.conv_layers = self.create_network(s1)
 
         if weights_file:
             self.load_weights(weights_file)
@@ -92,7 +92,7 @@ class Agent(object):
         l_conv2 = Conv2DLayer(l_conv1, num_filters=32, filter_size=[4, 4], nonlinearity=rectify, stride=2)
         l_conv3 = Conv2DLayer(l_conv2, num_filters=16, filter_size=[3, 3], nonlinearity=rectify, stride=1)
         l_hid1 = DenseLayer(l_conv3, num_units=512, nonlinearity=rectify)
-        return DenseLayer(l_hid1, num_units=self.actions, nonlinearity=None)
+        return DenseLayer(l_hid1, num_units=self.actions, nonlinearity=None), [l_conv1, l_conv2, l_conv3]
 
     def load_weights(self, filename):
         set_all_param_values(self.dqn, np.load(str(filename)))
@@ -124,7 +124,7 @@ class Agent(object):
         pct_random_rounds = 0.01
 
         if self.continue_training:
-            start_eps = 0.50
+            start_eps = 0.30
             pct_random_rounds = 0
 
         const_eps_epochs = pct_random_rounds * epochs  # 10% of learning time
@@ -157,9 +157,9 @@ class Agent(object):
         s3 = s2 if not isterminal else None
         if isterminal:
             x = 2 # TODO This doesn't do anything?
-        if(epoch > no_learn_epochs):
+        if epoch > no_learn_epochs:
             self.count += 1
-            if(self.count%self.channels == 0):
+            if self.count % self.channels == 0:
                 self.count = 0
                 self.learn_from_transition(s1, a, s3, isterminal, reward)
 

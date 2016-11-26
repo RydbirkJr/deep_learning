@@ -5,7 +5,7 @@ from agent import Agent
 env = gym.make('Pong-v0')
 
 # init agent
-agent = Agent(env, batch_size=32, replay_memory_size=1000, scale=1, cropping=(30, 10, 6, 6), rho=0.95, epsilon=0.01)
+agent = Agent(env, batch_size=32, replay_memory_size=1000, scale=1, cropping=(30, 10, 6, 6), rho=0.95, epsilon=0.01, weights_file='weights.dump')
 # agent = Agent(env, colors=False, scale=.5, cropping=(30, 10, 6, 6))
 # train agent on the environment
 
