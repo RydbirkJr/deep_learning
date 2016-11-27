@@ -19,20 +19,22 @@ env = gym.make('Pong-v0')
 
 # init agent
 # shape = env.observation_space.shape
-shape = (None, env.observation_space.shape[0], env.observation_space.shape[1], env.observation_space.shape[2])
+shape = (env.observation_space.shape[0], env.observation_space.shape[1], env.observation_space.shape[2])
 
-network = Network(shape, env.action_space.n)
+network = Network(shape, env.action_space.n, cropping = (0,0,0,0))
 agent = AgentPolicy(env, network)
 
 trajectories = []
 total_trajectories = 0
 while total_trajectories < 100:
-    trajectory = agent.get_trajectory(100, deterministic=True)
+    trajectory = agent.get_trajectory(1,100, deterministic=True)
     trajectories.append(trajectory)
     total_trajectories += len(trajectory["reward"])
 
 all_states = np.concatenate([trajectory["state"] for trajectory in trajectories])
-
+print all_states[0].shape
+img = Image.fromarray(all_states[0], 'RGB').convert('L')
+img.show()
 
 def convert_states():
     for i in range(100):
@@ -42,6 +44,7 @@ def convert_states():
 def image_convert():
     for i in range(100):
         img = Image.fromarray(all_states[i], 'RGB').convert('L')
+        img.show()
         arr = np.array(img)
 
 
@@ -56,7 +59,7 @@ for i in reversed(range(20, 100, 20)):
     img = Image.fromarray(all_states[20], 'RGB').convert('L')
     img.thumbnail(size, Image.ANTIALIAS)
     print 'i: ', i, 'shape: ', np.array(img).shape
-    img.show('i: ', i)
+    #img.show('i: ', i)
 
 
 

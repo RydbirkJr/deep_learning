@@ -89,8 +89,8 @@ class Agent(object):
     def create_network(self, s1):
         # policy network
         l_in = InputLayer(shape=(None, self.channels, self.resolution[0], self.resolution[1]), input_var=s1)
-        l_conv1 = Conv2DLayer(l_in, num_filters=32, filter_size=[8, 8], nonlinearity=rectify, stride=4)
-        l_conv2 = Conv2DLayer(l_conv1, num_filters=64, filter_size=[4, 4], nonlinearity=rectify, stride=2)
+        l_conv1 = Conv2DLayer(l_in, num_filters=16, filter_size=[8, 8], nonlinearity=rectify, stride=4)
+        l_conv2 = Conv2DLayer(l_conv1, num_filters=32, filter_size=[4, 4], nonlinearity=rectify, stride=2)
         l_conv3 = Conv2DLayer(l_conv2, num_filters=64, filter_size=[3, 3], nonlinearity=rectify, stride=1)
         l_hid1 = DenseLayer(l_conv3, num_units=512, nonlinearity=rectify)
         return DenseLayer(l_hid1, num_units=self.actions, nonlinearity=None)
