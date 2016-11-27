@@ -2,7 +2,7 @@ import lasagne
 import theano
 import theano.tensor as T
 from lasagne.init import Constant, HeUniform
-from lasagne.layers import InputLayer, DenseLayer, Conv2DLayer, get_output
+from lasagne.layers import InputLayer, DenseLayer, Conv2DLayer, get_output, set_all_param_values
 from lasagne.nonlinearities import leaky_rectify, softmax, sigmoid, tanh, elu, rectify
 from lasagne.objectives import squared_error
 from lasagne.updates import rmsprop, adam
@@ -10,7 +10,7 @@ import numpy as np
 
 
 class Network(object):
-    def __init__(self, resolution, number_of_outputs, cropping):
+    def __init__(self, resolution, number_of_outputs, cropping, weights_file=None):
         # symbolic variables for state, action, and advantage
         self.sym_state = T.tensor4()
         self.sym_action = T.vector("Actions", dtype="int32")
@@ -30,6 +30,9 @@ class Network(object):
         l_hid1 = DenseLayer(l_conv2, num_units=256, nonlinearity=rectify)
         self.l_out = DenseLayer(incoming=l_hid1, W=Constant(1), num_units=number_of_outputs, nonlinearity=softmax,
                            name='outputlayer')
+
+        if weights_file:
+            set_all_param_values(self.l_out, np.load(str(weights_file)))
 
         # policy network
         # l_in = InputLayer(shape=shape, input_var=self.sym_state)

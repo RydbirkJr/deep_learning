@@ -294,7 +294,7 @@ class AgentPolicy(Agent):
             # plt.imshow(img, cmap=plt.cm.gray)
             # img = img[np.newaxis, ...]
         # else:
-        #     img = img.reshape(self.channels, self.resolution[0], self.resolution[1])
+        #  img = img.reshape(self.channels, self.resolution[0], self.resolution[1])
 
         img = img.astype(np.float32)
 
