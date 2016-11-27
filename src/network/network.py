@@ -32,17 +32,6 @@ class Network(object):
                            name='outputlayer')
 
         # policy network
-<<<<<<< HEAD
-        l_in = InputLayer(shape=shape, input_var=self.sym_state)
-
-        l_conv1 = Conv2DLayer(incoming=l_in, num_filters=10, filter_size=6, stride=2, nonlinearity=rectify,
-                              W=Constant(0.000001))
-        l_conv2 = Conv2DLayer(incoming=l_conv1, num_filters=20, filter_size=3, stride=1,
-                              nonlinearity=rectify, W=Constant(1.0))
-        l_hid = DenseLayer(incoming=l_conv2, num_units=100, W=Constant(1.0), nonlinearity=rectify, name='hiddenlayer1')
-        l_out = DenseLayer(incoming=l_hid, W=Constant(1), num_units=number_of_ouputs, nonlinearity=None,
-                           name='outputlayer')
-=======
         # l_in = InputLayer(shape=shape, input_var=self.sym_state)
         #
         # l_conv1 = Conv2DLayer(incoming=l_in, num_filters=10, filter_size=6, stride=2, nonlinearity=rectify,
@@ -52,7 +41,6 @@ class Network(object):
         # l_hid = DenseLayer(incoming=l_conv2, num_units=100, W=Constant(1.0), nonlinearity=rectify, name='hiddenlayer1')
         # l_out = DenseLayer(incoming=l_hid, W=Constant(1), num_units=number_of_ouputs, nonlinearity=softmax,
         #                    name='outputlayer')
->>>>>>> 8016307c10849ff9b97e0edb0f435311050b65a2
 
         # get network output
         eval_out = lasagne.layers.get_output(self.l_out, {l_in: self.sym_state}, deterministic=True)
@@ -63,14 +51,8 @@ class Network(object):
         # loss function that we'll differentiate to get the policy gradient
         loss = -T.log(eval_out[T.arange(total_timesteps), self.sym_action]).dot(self.sym_advantage) / total_timesteps
 
-<<<<<<< HEAD
-        self.q = get_output(l_out)
-        self.target_q = T.set_subtensor(self.q[T.arange(self.q.shape[0]), self.sym_action], self.sym_r + 0.99 * (1 - 0) * self.sym_q2)
-        loss = squared_error(self.q, self.target_q).mean()
-=======
         # learning_rate
         learning_rate = T.fscalar()
->>>>>>> 8016307c10849ff9b97e0edb0f435311050b65a2
 
 
         # get trainable parameters in the network.
@@ -79,16 +61,8 @@ class Network(object):
         # get gradients
         grads = T.grad(loss, params)
 
-<<<<<<< HEAD
-        #updates = lasagne.updates.adam(grads, params, learning_rate=learning_rate)
-
-        # get trainable parameters in the network.
-        params = lasagne.layers.get_all_params(l_out, trainable=True)
-        updates = rmsprop(loss, params, learning_rate)
-=======
         # update function
         updates = lasagne.updates.adam(grads, params, learning_rate=learning_rate)
->>>>>>> 8016307c10849ff9b97e0edb0f435311050b65a2
 
         print "Compiling the network ..."
         self.f_train = theano.function(
@@ -124,17 +98,6 @@ class Network(object):
         return self.f_train(all_states, all_actions, all_advantages, learning_rate)
 
     def evaluate(self, state):
-<<<<<<< HEAD
-        e = self.fn_get_best_action(state)
-        return e
-        # return self.f_eval(state)
-
-    def get_q(self, state):
-        q = self.fn_get_q_values(state)
-        #print "q:",q
-        return q
-=======
         #e = self.fn_get_best_action(state)
         #return e
         return self.f_eval(state)
->>>>>>> 8016307c10849ff9b97e0edb0f435311050b65a2
